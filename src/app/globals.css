@@ -1,0 +1,117 @@
+@import "tailwindcss";
+
+/* ESTA LÍNEA ES LA MAGIA PARA TAILWIND V4 SIN CONFIG FILE */
+@custom-variant dark (&:where(.dark, .dark *));
+
+@theme {
+  /* Paleta de Colores Premium GECO LURES */
+  --color-geco-orange: #FF6B00;
+  --color-geco-orange-hover: #e65c00;
+  --color-geco-black: #0e0e0e;
+  --color-geco-gray-dark: #1a1a1a;
+  --color-geco-white: #ffffff;
+  --color-geco-gray-light: #f9fafb;
+  --color-whatsapp: #25D366;
+  
+  /* Tipografías (Asegúrate de importarlas en tu layout.tsx con next/font) */
+  --font-sans: var(--font-inter), ui-sans-serif, system-ui, sans-serif;
+  --font-display: var(--font-space-grotesk), ui-sans-serif, system-ui, sans-serif;
+}
+
+@layer base {
+  body {
+    background-color: var(--color-geco-gray-light); /* Color claro por defecto */
+    color: rgb(17 24 39); /* Gris muy oscuro para el texto en modo claro */
+    font-feature-settings: 'rlig' 1, 'calt' 1;
+    transition: background-color 0.3s ease, color 0.3s ease; /* Suaviza el cambio */
+  }
+
+  /* Estilos específicos cuando la clase .dark está activa */
+  .dark body {
+    background-color: var(--color-geco-black); /* Fondo oscuro profundo */
+    color: var(--color-geco-white); /* Texto en blanco para resaltar */
+  }
+}
+
+@layer utilities {
+  /* Custom animations */
+  @keyframes fade-in {
+    from { opacity: 0; transform: translateY(-10px); }
+    to { opacity: 1; transform: translateY(0); }
+  }
+
+  .animate-fade-in { animation: fade-in 0.6s ease-out; }
+
+  /* Borde de texto adaptado para los títulos gigantes de GECO */
+  .text-stroke-geco {
+    -webkit-text-stroke: 1px var(--color-geco-orange);
+    color: transparent;
+    paint-order: stroke fill;
+  }
+
+  html { scroll-behavior: smooth; }
+
+  .hide-scrollbar::-webkit-scrollbar { display: none; }
+  .hide-scrollbar { -ms-overflow-style: none; scrollbar-width: none; }
+
+  .hover-scale { transition: transform 0.3s; }
+  .hover-scale:hover { transform: scale(1.05); }
+}
+
+/* Scrollbar Styles - Adaptados a dark mode manual */
+::-webkit-scrollbar { width: 10px; height: 10px; }
+
+::-webkit-scrollbar-track { background-color: rgb(243 244 246); }
+.dark ::-webkit-scrollbar-track { background-color: var(--color-geco-black); }
+
+/* Thumb del scroll con un toque sutil */
+::-webkit-scrollbar-thumb { background-color: rgb(209 213 219); border-radius: 9999px; }
+.dark ::-webkit-scrollbar-thumb { background-color: var(--color-geco-gray-dark); }
+
+::-webkit-scrollbar-thumb:hover { background-color: rgb(156 163 175); }
+.dark ::-webkit-scrollbar-thumb:hover { background-color: #333333; }
+
+/* Sobrescribir colores de Swiper para que coincidan con la marca GECO */
+:root {
+  --swiper-theme-color: #FF6B00;
+  --swiper-navigation-size: 30px;
+}
+
+/* Animación personalizada para la barra de progreso */
+@keyframes progressbar-fill {
+  from {
+    transform: scaleX(0);
+  }
+  to {
+    transform: scaleX(1);
+  }
+}
+
+.custom-swiper-pagination .swiper-pagination-progressbar-fill {
+  /* La animación debe durar el mismo tiempo que el autoplayDelay */
+  animation: progressbar-fill 5s linear infinite;
+  transform-origin: left center;
+}
+
+/* Animations */
+@keyframes spin-slow { from { transform: rotate(0deg); } to { transform: rotate(360deg); } }
+.animate-spin-slow { animation: spin-slow 3s linear infinite; }
+
+@keyframes fade-in-up { from { opacity: 0; transform: translateY(20px); } to { opacity: 1; transform: translateY(0); } }
+.animate-fade-in-up { animation: fade-in-up 0.6s ease-out; }
+
+/* Shimmer Effect - Adaptado a los fondos de GECO */
+@keyframes shimmer { 0% { background-position: -1000px 0; } 100% { background-position: 1000px 0; } }
+.animate-shimmer {
+  animation: shimmer 2s infinite;
+  background: linear-gradient(to right, #f6f7f8 0%, #edeef1 20%, #f6f7f8 40%, #f6f7f8 100%);
+  background-size: 1000px 100%;
+}
+.dark .animate-shimmer {
+  animation: shimmer 2s infinite;
+  background: linear-gradient(to right, #0e0e0e 0%, #1a1a1a 20%, #0e0e0e 40%, #0e0e0e 100%);
+  background-size: 1000px 100%;
+}
+
+@keyframes pulse-slow { 0%, 100% { opacity: 1; } 50% { opacity: 0.7; } }
+.animate-pulse-slow { animation: pulse-slow 3s cubic-bezier(0.4, 0, 0.6, 1) infinite; }
