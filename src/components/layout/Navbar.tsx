@@ -51,7 +51,7 @@ export default function Navbar() {
               <Link href="/novedades" className="text-gray-700 dark:text-gray-300 hover:text-orange-500 dark:hover:text-orange-500 transition-colors drop-shadow-sm">
                 Novedades
               </Link>
-              <Link href="/equipo" className="text-gray-700 dark:text-gray-300 hover:text-orange-500 dark:hover:text-orange-500 transition-colors drop-shadow-sm">
+              <Link href="/team" className="text-gray-700 dark:text-gray-300 hover:text-orange-500 dark:hover:text-orange-500 transition-colors drop-shadow-sm">
                 Team GECO
               </Link>
             </div>
