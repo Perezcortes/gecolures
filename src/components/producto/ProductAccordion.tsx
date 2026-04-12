@@ -3,23 +3,29 @@
 import { useState } from "react";
 import { FiPlus, FiMinus } from "react-icons/fi";
 
-const specs = [
-  {
-    title: "ESPECIFICACIONES DEL PRODUCTO",
-    content: "Fabricado con nuestro polímero GECO exclusivo. Diseñado para soportar múltiples capturas sin perder flexibilidad. Su cuerpo segmentado desplaza agua de manera agresiva para llamar la atención en aguas turbias."
-  },
-  {
-    title: "EL PAQUETE INCLUYE",
-    content: "8 señuelos de plástico suave infundidos con sal y nuestra esencia atrayente exclusiva."
-  },
-  {
-    title: "ENVÍOS Y DEVOLUCIONES",
-    content: "Envío gratis en pedidos mayores a $899 MXN. Despachamos en 24 horas hábiles desde nuestra base táctica. Tienes 30 días para devoluciones si el producto no ha sido abierto."
-  }
-];
+type AccordionProps = {
+  descripcion: string;
+  paqueteIncluye: string;
+};
 
-export default function ProductAccordion() {
-  const [openIndex, setOpenIndex] = useState<number | null>(0); // El primero abierto por defecto
+export default function ProductAccordion({ descripcion, paqueteIncluye }: AccordionProps) {
+  const [openIndex, setOpenIndex] = useState<number | null>(0);
+
+  const specs = [
+    {
+      title: "ESPECIFICACIONES DEL PRODUCTO",
+      content: descripcion || "Diseñado con ingeniería de élite para máximo rendimiento en el agua."
+    },
+    {
+      title: "EL PAQUETE INCLUYE",
+      // Si el producto tiene el dato, lo usa. Si no, pone un texto por defecto.
+      content: paqueteIncluye || "Señuelos de plástico suave infundidos con sal y nuestra esencia atrayente exclusiva."
+    },
+    {
+      title: "ENVÍOS Y DEVOLUCIONES",
+      content: "Envío gratis en pedidos mayores a $899 MXN. Despachamos en 24 horas hábiles desde nuestra base táctica. Tienes 30 días para devoluciones si el producto no ha sido abierto."
+    }
+  ];
 
   const toggleAccordion = (index: number) => {
     setOpenIndex(openIndex === index ? null : index);
@@ -42,7 +48,7 @@ export default function ProductAccordion() {
           </button>
           
           <div className={`overflow-hidden transition-all duration-300 ease-in-out ${openIndex === index ? 'max-h-96 pb-6 opacity-100' : 'max-h-0 opacity-0'}`}>
-            <p className="text-sm text-gray-600 dark:text-zinc-400 leading-relaxed font-medium">
+            <p className="text-sm text-gray-600 dark:text-zinc-400 leading-relaxed font-medium whitespace-pre-line">
               {item.content}
             </p>
           </div>

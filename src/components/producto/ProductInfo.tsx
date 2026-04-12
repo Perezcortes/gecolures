@@ -1,92 +1,153 @@
 "use client";
 
-import { useState } from "react";
-import { FiShoppingBag } from "react-icons/fi";
+import { useState, useEffect } from "react";
+import { FiShoppingBag, FiShare2 } from "react-icons/fi";
 
-// Agregué más colores para simular un catálogo extenso y comprobar que el diseño lo soporta
-const colors = [
-  { name: "June Bug", hex: "#321356" },
-  { name: "Green Pumpkin", hex: "#3e4a1f" },
-  { name: "Midnight Chrome", hex: "#000000" },
-  { name: "Red Shad", hex: "#8b0000" },
-  { name: "Safety Orange", hex: "#ff7a2f" },
-  { name: "Watermelon Seed", hex: "#4b5320" },
-  { name: "Pearl White", hex: "#f0f0f0" },
-  { name: "Chartreuse", hex: "#dfff00" },
-  { name: "Black Blue", hex: "#000033" },
-  { name: "Motor Oil", hex: "#4a4000" },
-];
+type ProductInfoProps = {
+  producto: any;
+  colores: any[];
+  tallas: string[];
+};
 
-export default function ProductInfo() {
-  const [selectedSize, setSelectedSize] = useState("4\"");
-  const [selectedColor, setSelectedColor] = useState(colors[0].name);
+export default function ProductInfo({ producto, colores, tallas }: ProductInfoProps) {
+  const [selectedSize, setSelectedSize] = useState<string>("");
+  const [selectedColor, setSelectedColor] = useState<string>("");
+
+  const tallasOrdenadas = [...tallas].sort((a, b) => {
+    const numA = parseFloat(a.replace(/[^0-9.]/g, ''));
+    const numB = parseFloat(b.replace(/[^0-9.]/g, ''));
+    if (isNaN(numA) && isNaN(numB)) return a.localeCompare(b);
+    if (isNaN(numA)) return 1;
+    if (isNaN(numB)) return -1;
+    return numA - numB;
+  });
+
+  useEffect(() => {
+    if (tallasOrdenadas.length > 0) setSelectedSize(tallasOrdenadas[0]);
+    if (colores.length > 0) setSelectedColor(colores[0].nombre);
+  }, [tallas, colores]);
+
+  const handleShare = async () => {
+    const shareData = {
+      title: `${producto.nombre} | Geco Lures`,
+      text: `Mira este ${producto.nombre} en Geco Lures. Arsenal de Élite.`,
+      url: window.location.href,
+    };
+
+    if (navigator.share) {
+      try {
+        await navigator.share(shareData);
+      } catch (err) {
+        console.log("Compartir cancelado");
+      }
+    } else {
+      navigator.clipboard.writeText(window.location.href);
+      alert("¡Enlace copiado al portapapeles!");
+    }
+  };
 
   return (
     <div className="flex flex-col">
-      {/* Header más compacto */}
       <header className="mb-6 border-b border-gray-200 dark:border-zinc-800 pb-5">
-        <p className="text-[10px] font-bold uppercase tracking-widest text-orange-500 mb-1">
-          PLÁSTICOS SUAVES
-        </p>
-        <h1 className="font-display font-black text-4xl md:text-5xl leading-[0.9] uppercase tracking-tighter text-gray-900 dark:text-white mb-2">
-          GECO CRAW
-        </h1>
-        <div className="flex items-center gap-3">
-          <span className="text-2xl font-display font-black text-gray-900 dark:text-white tracking-tighter">$185.00</span>
-          <span className="text-[10px] font-bold text-gray-500 dark:text-zinc-500 uppercase tracking-widest mt-1.5">MXN</span>
-        </div>
         
-        {/* Bullets más sutiles */}
-        <div className="flex flex-wrap items-center gap-4 mt-4">
-          <span className="flex items-center gap-1.5 text-[10px] font-bold uppercase tracking-widest text-gray-600 dark:text-zinc-400">
-            <span className="w-1.5 h-1.5 bg-orange-500 rounded-full"></span> Scented
-          </span>
-          <span className="flex items-center gap-1.5 text-[10px] font-bold uppercase tracking-widest text-gray-600 dark:text-zinc-400">
-            <span className="w-1.5 h-1.5 bg-orange-500 rounded-full"></span> Heavy Salt
-          </span>
+        <div className="flex justify-between items-center mb-1">
+          <p className="text-[10px] font-bold uppercase tracking-widest text-orange-500">
+            {producto.categorias?.nombre || "EQUIPO TÁCTICO"}
+          </p>
+          <button 
+            onClick={handleShare} 
+            className="text-gray-500 dark:text-zinc-400 hover:text-orange-500 dark:hover:text-orange-500 transition-colors flex items-center gap-1.5 text-xs md:text-sm font-black uppercase tracking-widest"
+          >
+            <FiShare2 className="w-4 h-4 md:w-5 md:h-5" /> COMPARTIR
+          </button>
+        </div>
+
+        <h1 className="font-display font-black text-4xl md:text-5xl leading-[0.9] uppercase tracking-tighter text-gray-900 dark:text-white mb-2">
+          {producto.nombre}
+        </h1>
+        
+        <div className="flex items-center gap-3">
+          <span className="text-2xl font-display font-black text-gray-900 dark:text-white tracking-tighter">${producto.precio_base}</span>
+          <span className="text-[10px] font-bold text-gray-500 dark:text-zinc-500 uppercase tracking-widest mt-1.5">MXN</span>
         </div>
       </header>
 
-      {/* Selector de Color (Ahora escalable) */}
-      <div className="mb-6">
-        <div className="flex items-center gap-2 mb-3">
-          <h3 className="text-[10px] font-bold uppercase tracking-widest text-gray-900 dark:text-white">Color:</h3>
-          <span className="text-[10px] font-bold text-gray-500 dark:text-zinc-400">{selectedColor}</span>
-        </div>
-        {/* Cambiamos gap y tamaño para que quepan muchos más */}
-        <div className="flex flex-wrap gap-2 md:gap-2.5">
-          {colors.map((color) => (
-            <button
-              key={color.name}
-              onClick={() => setSelectedColor(color.name)}
-              style={{ backgroundColor: color.hex }}
-              title={color.name}
-              // Redujimos de w-12/h-12 a w-8/h-8 (o w-9 en desktop)
-              className={`w-8 h-8 md:w-9 md:h-9 rounded-full border transition-all shadow-sm ${selectedColor === color.name ? 'border-white dark:border-zinc-900 ring-2 ring-orange-500 scale-110' : 'border-gray-200 dark:border-zinc-700 hover:scale-105'}`}
-            />
-          ))}
-        </div>
+      {/* INDICADOR DE STOCK */}
+      <div className="mb-6 bg-green-500/10 border border-green-500/20 rounded-full px-3 py-1.5 flex items-center gap-2 w-fit">
+        <span className="relative flex h-2 w-2">
+          <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-green-400 opacity-75"></span>
+          <span className="relative inline-flex rounded-full h-2 w-2 bg-green-500"></span>
+        </span>
+        <span className="text-[9px] font-black uppercase tracking-widest text-green-600 dark:text-green-500 mt-0.5">
+          EN STOCK
+        </span>
       </div>
 
-      {/* Selector de Tamaño (Compacto) */}
-      <div className="mb-8">
-        <h3 className="text-[10px] font-bold uppercase tracking-widest text-gray-900 dark:text-white mb-3">Tamaño</h3>
-        {/* flex-wrap permite que si hay muchas tallas, pasen al renglón de abajo sin deformarse */}
-        <div className="flex flex-wrap gap-2.5">
-          {["3\"", "4\"", "5\"", "6\"", "XL"].map((size) => (
-            <button
-              key={size}
-              onClick={() => setSelectedSize(size)}
-              // Quitamos flex-1, ajustamos padding y fuente a text-sm/base
-              className={`min-w-[3.5rem] px-4 py-2 font-display font-black text-sm md:text-base transition-all rounded border ${selectedSize === size ? 'bg-orange-500 text-white border-orange-500 shadow-sm' : 'bg-transparent text-gray-900 dark:text-white border-gray-300 dark:border-zinc-700 hover:border-orange-500'}`}
-            >
-              {size}
-            </button>
-          ))}
+      {/* === LÓGICA INTELIGENTE DE COLORES === */}
+      
+      {/* CASO 1: COLOR ÚNICO (Modo Lectura) */}
+      {colores.length === 1 && (
+        <div className="mb-6">
+          <div className="flex items-center gap-2 mb-3">
+            <h3 className="text-[10px] font-bold uppercase tracking-widest text-gray-900 dark:text-white">Color Único:</h3>
+            <span className="text-[10px] font-bold text-orange-500">{colores[0].nombre}</span>
+          </div>
+          <div
+            title={colores[0].nombre}
+            className="w-8 h-8 md:w-9 md:h-9 rounded-full border border-gray-200 dark:border-zinc-700 shadow-sm bg-zinc-800 cursor-default"
+            style={{ 
+              backgroundImage: `url(${colores[0].swatch_url})`, 
+              backgroundSize: 'cover',
+              backgroundPosition: 'center'
+            }}
+          />
         </div>
-      </div>
+      )}
 
-      {/* Botón de Compra (Proporcionado) */}
+      {/* CASO 2: MÚLTIPLES COLORES (Modo Interactivo) */}
+      {colores.length > 1 && (
+        <div className="mb-6">
+          <div className="flex items-center gap-2 mb-3">
+            <h3 className="text-[10px] font-bold uppercase tracking-widest text-gray-900 dark:text-white">Color:</h3>
+            <span className="text-[10px] font-bold text-gray-500 dark:text-zinc-400">{selectedColor}</span>
+          </div>
+          <div className="flex flex-wrap gap-2 md:gap-2.5">
+            {colores.map((color) => (
+              <button
+                key={color.id}
+                onClick={() => setSelectedColor(color.nombre)}
+                title={color.nombre}
+                style={{ 
+                  backgroundImage: `url(${color.swatch_url})`, 
+                  backgroundSize: 'cover',
+                  backgroundPosition: 'center'
+                }}
+                className={`w-8 h-8 md:w-9 md:h-9 rounded-full border transition-all shadow-sm bg-zinc-800 ${selectedColor === color.nombre ? 'border-white dark:border-zinc-900 ring-2 ring-orange-500 scale-110' : 'border-gray-200 dark:border-zinc-700 hover:scale-105'}`}
+              />
+            ))}
+          </div>
+        </div>
+      )}
+      {/* ====================================== */}
+
+      {/* Selector de Tamaño */}
+      {tallasOrdenadas.length > 0 && (
+        <div className="mb-8">
+          <h3 className="text-[10px] font-bold uppercase tracking-widest text-gray-900 dark:text-white mb-3">Tamaño</h3>
+          <div className="flex flex-wrap gap-2.5">
+            {tallasOrdenadas.map((size) => (
+              <button
+                key={size}
+                onClick={() => setSelectedSize(size)}
+                className={`min-w-[3.5rem] px-4 py-2 font-display font-black text-sm md:text-base transition-all rounded border ${selectedSize === size ? 'bg-orange-500 text-white border-orange-500 shadow-sm' : 'bg-transparent text-gray-900 dark:text-white border-gray-300 dark:border-zinc-700 hover:border-orange-500'}`}
+              >
+                {size}
+              </button>
+            ))}
+          </div>
+        </div>
+      )}
+
       <div className="space-y-4 mb-8">
         <button className="w-full bg-gray-900 dark:bg-white text-white dark:text-black py-4 font-display font-black text-lg uppercase tracking-widest transition-colors hover:bg-orange-500 dark:hover:bg-orange-500 hover:text-white rounded flex items-center justify-center gap-3 shadow-md">
           <FiShoppingBag className="w-5 h-5" />
@@ -94,16 +155,17 @@ export default function ProductInfo() {
         </button>
       </div>
 
-      {/* Squad Tip (Tipografía más fina) */}
-      <div className="bg-zinc-50 dark:bg-[#121212] p-5 border border-gray-200 dark:border-zinc-800 rounded">
-        <h4 className="font-display font-black text-[10px] uppercase tracking-widest mb-2 flex items-center gap-1.5 text-orange-500">
-          <span className="material-symbols-outlined text-sm">military_tech</span>
-          GECO TIP
-        </h4>
-        <p className="text-xs text-gray-600 dark:text-zinc-400 leading-relaxed font-medium italic">
-          "El Geco Craw está diseñado con patas en forma de V que crean una acción de pataleo agresiva. Móntalo en un Texas Rig ligero para penetrar cobertura densa, o úsalo como tráiler en tu jig favorito para darle extra volumen y vibración."
-        </p>
-      </div>
+      {producto.squad_tip && (
+        <div className="bg-zinc-50 dark:bg-[#121212] p-5 border border-gray-200 dark:border-zinc-800 rounded">
+          <h4 className="font-display font-black text-[10px] uppercase tracking-widest mb-2 flex items-center gap-1.5 text-orange-500">
+            <span className="material-symbols-outlined text-sm">military_tech</span>
+            GECO TIP
+          </h4>
+          <p className="text-xs text-gray-600 dark:text-zinc-400 leading-relaxed font-medium italic">
+            "{producto.squad_tip}"
+          </p>
+        </div>
+      )}
     </div>
   );
 }

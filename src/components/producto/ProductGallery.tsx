@@ -1,46 +1,78 @@
 "use client";
 
 import Image from "next/image";
-import { useState } from "react";
+import { useState, useEffect } from "react";
+import { FiImage, FiZoomIn } from "react-icons/fi";
 
-export default function ProductGallery() {
-  const [mainImage, setMainImage] = useState("/craw.png");
-  const thumbnails = ["/craw.png", "/stick.png", "/swimbait.png"];
+export default function ProductGallery({ imagenes }: { imagenes: string[] }) {
+  const [mainImage, setMainImage] = useState<string | null>(null);
+  
+  // Estados para la lupa
+  const [isHovering, setIsHovering] = useState(false);
+  const [mousePos, setMousePos] = useState({ x: 50, y: 50 });
+
+  useEffect(() => {
+    if (imagenes.length > 0) {
+      setMainImage(imagenes[0]);
+    }
+  }, [imagenes]);
+
+  // Calcula la posición del mouse en porcentaje para hacer el zoom en el lugar correcto
+  const handleMouseMove = (e: React.MouseEvent<HTMLDivElement>) => {
+    const { left, top, width, height } = e.currentTarget.getBoundingClientRect();
+    const x = ((e.clientX - left) / width) * 100;
+    const y = ((e.clientY - top) / height) * 100;
+    setMousePos({ x, y });
+  };
+
+  if (!mainImage) {
+    return <div className="h-[500px] bg-zinc-100 dark:bg-[#121212] rounded-lg flex items-center justify-center"><FiImage className="w-12 h-12 text-zinc-500"/></div>;
+  }
 
   return (
     <div className="flex flex-col gap-4">
-      {/* Imagen Principal - Ajustes Clave */}
-      {/* Quitamos aspect-square forzado y le damos una altura controlada */}
-      <div className="relative bg-zinc-50 dark:bg-[#121212] flex items-center justify-center p-8 border border-gray-200 dark:border-zinc-800/50 rounded-lg h-[500px] md:h-[600px]">
+      {/* Contenedor Principal con Lupa */}
+      <div 
+        className="relative bg-zinc-50 dark:bg-[#121212] flex items-center justify-center p-8 border border-gray-200 dark:border-zinc-800/50 rounded-lg h-[450px] md:h-[550px] overflow-hidden cursor-crosshair group"
+        onMouseMove={handleMouseMove}
+        onMouseEnter={() => setIsHovering(true)}
+        onMouseLeave={() => setIsHovering(false)}
+      >
+        <div className="absolute inset-0 opacity-[0.03] dark:opacity-5 pointer-events-none bg-[radial-gradient(ellipse_at_center,_var(--tw-gradient-stops))] from-white via-transparent to-transparent z-0"></div>
+        
+        {/* Icono de Lupa que desaparece al hacer hover */}
+        <div className="absolute top-4 right-4 z-20 bg-zinc-900/50 text-white p-2 rounded-full opacity-50 group-hover:opacity-0 transition-opacity pointer-events-none">
+          <FiZoomIn className="w-4 h-4" />
+        </div>
+
         <Image 
           src={mainImage} 
           alt="Geco Lure" 
-          width={800} 
-          height={800} 
-          // Redujimos el tamaño al 85% para darle respiro y quitamos el drop-shadow extremo
-          className="w-[85%] h-[85%] object-contain drop-shadow-xl transition-transform duration-500 hover:scale-105"
+          fill
+          // Si está en hover, hacemos scale-250 (2.5x), si no, lo dejamos normal. 
+          // Redujimos la duración de la transición para que se sienta más "ágil" al seguir el mouse.
+          className={`p-12 object-contain drop-shadow-xl z-10 transition-transform duration-100 ease-out ${isHovering ? 'scale-[2.5]' : 'scale-100'}`}
+          style={{
+            transformOrigin: isHovering ? `${mousePos.x}% ${mousePos.y}%` : 'center center'
+          }}
           priority
         />
-        <div className="absolute top-6 left-6">
-          <span className="bg-orange-500 text-white font-display font-black px-4 py-1.5 text-xs uppercase tracking-widest skew-x-[-12deg] inline-block shadow-md">
-            NUEVO COLOR
-          </span>
-        </div>
       </div>
 
       {/* Miniaturas */}
-      <div className="flex gap-4 mt-2">
-        {thumbnails.map((thumb, index) => (
-          <button 
-            key={index}
-            onClick={() => setMainImage(thumb)}
-            // Ajustamos las miniaturas para que sean sutiles
-            className={`bg-zinc-50 dark:bg-[#121212] aspect-square w-24 p-2 border-2 rounded-md transition-all flex items-center justify-center ${mainImage === thumb ? 'border-orange-500 ring-2 ring-orange-500/20' : 'border-transparent hover:border-gray-400 dark:border-zinc-800/50'}`}
-          >
-            <Image src={thumb} alt="Thumbnail" width={100} height={100} className="w-full h-full object-contain" />
-          </button>
-        ))}
-      </div>
+      {imagenes.length > 1 && (
+        <div className="flex flex-wrap gap-4 mt-2">
+          {imagenes.map((thumb, index) => (
+            <button 
+              key={index}
+              onClick={() => setMainImage(thumb)}
+              className={`relative bg-zinc-50 dark:bg-[#121212] aspect-square w-20 md:w-24 p-2 border-2 rounded-md transition-all flex items-center justify-center overflow-hidden ${mainImage === thumb ? 'border-orange-500 ring-2 ring-orange-500/20' : 'border-transparent hover:border-gray-400 dark:border-zinc-800/50'}`}
+            >
+              <Image src={thumb} alt="Thumbnail" fill className="p-2 object-contain" />
+            </button>
+          ))}
+        </div>
+      )}
     </div>
   );
 }
