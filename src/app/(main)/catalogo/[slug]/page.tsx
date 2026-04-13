@@ -5,6 +5,7 @@ import { createClient } from "@/utils/supabase/server";
 import ProductGallery from "@/components/producto/ProductGallery";
 import ProductInfo from "@/components/producto/ProductInfo";
 import ProductAccordion from "@/components/producto/ProductAccordion";
+import { calcularPrecioYPiezas } from "@/utils/calculadoraGeco"; // <-- IMPORTAMOS LA MAGIA AQUÍ
 
 export async function generateMetadata({
   params
@@ -14,7 +15,6 @@ export async function generateMetadata({
   const { slug } = await params;
   const supabase = await createClient();
 
-  // Buscamos el producto rápido solo para sacar su info básica y su foto
   const { data: producto } = await supabase
     .from("productos")
     .select("nombre, squad_tip, descripcion, producto_variantes(imagen_principal_url)")
@@ -25,7 +25,6 @@ export async function generateMetadata({
     return { title: "Producto no encontrado | Geco Lures" };
   }
 
-  // Tratamos de agarrar la primera foto de las variantes para enviarla a WhatsApp/Facebook
   const imageUrl = producto.producto_variantes?.[0]?.imagen_principal_url || "https://tusitio.com/default-og.jpg";
 
   return {
@@ -47,18 +46,14 @@ export async function generateMetadata({
   };
 }
 
-// 1. Le decimos a TypeScript que params ahora es una Promesa
 export default async function ProductoDetalle({
   params
 }: {
   params: Promise<{ slug: string }>
 }) {
   const supabase = await createClient();
-
-  // 2. ¡EL ARREGLO MÁGICO! Esperamos a que la promesa se resuelva
   const { slug } = await params;
 
-  // 3. Hacemos la consulta usando la variable "slug" ya desenvuelta
   const { data: producto, error } = await supabase
     .from("productos")
     .select(`
@@ -66,14 +61,13 @@ export default async function ProductoDetalle({
       categorias (nombre),
       producto_variantes (
         imagen_principal_url,
-        colores (id, nombre, swatch_url),
+        colores (id, nombre, swatch_url, clasificacion),
         especificaciones (valor)
       )
     `)
     .eq("slug", slug)
     .single();
 
-  // === MODO DETECTIVE ===
   if (error || !producto) {
     return (
       <main className="pt-32 pb-16 px-6 text-center">
@@ -85,7 +79,6 @@ export default async function ProductoDetalle({
       </main>
     );
   }
-  // =======================
 
   // Extraemos datos únicos de las variantes
   const imagenesUnicas = new Set<string>();
@@ -97,6 +90,16 @@ export default async function ProductoDetalle({
     if (v.colores) coloresUnicos.set(v.colores.id, v.colores);
     if (v.especificaciones) tallasUnicas.add(v.especificaciones.valor);
   });
+
+  const coloresArray = Array.from(coloresUnicos.values());
+  const tallasArray = Array.from(tallasUnicas);
+
+  // 🚀 CÁLCULO DINÁMICO POR DEFECTO
+  // Agarramos la primera talla y el primer color disponible para calcular el estado inicial
+  const tallaMuestra = tallasArray.length > 0 ? tallasArray[0] : "5\"";
+  const colorMuestra = coloresArray.length > 0 ? (coloresArray[0] as any).nombre : "";
+  
+  const calculo = calcularPrecioYPiezas(producto.nombre, tallaMuestra, colorMuestra);
 
   return (
     <main className="pt-28 pb-16 px-4 md:px-6 max-w-[1400px] mx-auto bg-zinc-50 dark:bg-[#0e0e0e] min-h-screen">
@@ -120,12 +123,8 @@ export default async function ProductoDetalle({
         <div className="lg:col-span-5 flex flex-col">
           <ProductInfo
             producto={producto}
-            colores={Array.from(coloresUnicos.values())}
-            tallas={Array.from(tallasUnicas)}
-          />
-          <ProductAccordion
-            descripcion={producto.descripcion}
-            paqueteIncluye={producto.paquete_incluye}
+            colores={coloresArray}
+            tallas={tallasArray}
           />
         </div>
 

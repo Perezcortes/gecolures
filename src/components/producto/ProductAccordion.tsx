@@ -5,11 +5,16 @@ import { FiPlus, FiMinus } from "react-icons/fi";
 
 type AccordionProps = {
   descripcion: string;
-  paqueteIncluye: string;
+  piezas?: number | string; // <-- Ahora recibe directamente el número de piezas
 };
 
-export default function ProductAccordion({ descripcion, paqueteIncluye }: AccordionProps) {
+export default function ProductAccordion({ descripcion, piezas }: AccordionProps) {
   const [openIndex, setOpenIndex] = useState<number | null>(0);
+
+  // 🚀 Lógica automática para el texto del paquete
+  const textoPaquete = piezas 
+    ? `Este empaque contiene ${piezas} piezas.\n\nPlásticos suaves de grado táctico, infundidos con sal y nuestra esencia atrayente exclusiva para maximizar el tiempo de retención en la mordida.`
+    : "Plásticos suaves de grado táctico, infundidos con sal y nuestra esencia atrayente exclusiva para maximizar el tiempo de retención en la mordida.";
 
   const specs = [
     {
@@ -18,12 +23,11 @@ export default function ProductAccordion({ descripcion, paqueteIncluye }: Accord
     },
     {
       title: "EL PAQUETE INCLUYE",
-      // Si el producto tiene el dato, lo usa. Si no, pone un texto por defecto.
-      content: paqueteIncluye || "Señuelos de plástico suave infundidos con sal y nuestra esencia atrayente exclusiva."
+      content: textoPaquete // <-- Usa el texto automático que creamos arriba
     },
     {
       title: "ENVÍOS Y DEVOLUCIONES",
-      content: "Envío gratis en pedidos mayores a $899 MXN. Despachamos en 24 horas hábiles desde nuestra base táctica. Tienes 30 días para devoluciones si el producto no ha sido abierto."
+      content: "Envío gratis en pedidos mayores a $899 MXN. Despachamos en 24 horas hábiles desde nuestra base táctica. Tienes 30 días para devoluciones si el empaque original no ha sido abierto."
     }
   ];
 
