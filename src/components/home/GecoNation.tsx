@@ -17,13 +17,21 @@ const COMMUNITY_POSTS = [
   {
     id: 2,
     plataforma: "facebook",
+    username: "J Torres",
+    userImage: "https://res.cloudinary.com/dkem2i0fv/image/upload/v1776236843/548227689_764398456566162_4922236690723613070_n_mrwxpf.jpg",
+    postImage: "https://res.cloudinary.com/dkem2i0fv/image/upload/v1776236843/WhatsApp_Image_2026-04-15_at_1.06.10_AM_twnrma.jpg",
+    link: "https://www.facebook.com/jesustorresart/?locale=es_LA"
+  },
+  {
+    id: 3,
+    plataforma: "facebook",
     username: "Fernando Javier Malacara Perales",
     userImage: "https://res.cloudinary.com/dkem2i0fv/image/upload/v1776023891/651363139_26240176022283005_4141471570738872256_n_eqqslu.jpg",
     postImage: "https://res.cloudinary.com/dkem2i0fv/image/upload/v1776021291/WhatsApp_Image_2026-04-12_at_12.21.54_PM_nrnbei.jpg",
     link: "https://www.facebook.com/fernandojavier.malacaraperales/?locale=es_LA"
   },
   {
-    id: 3,
+    id: 4,
     plataforma: "instagram",
     username: "carlosbuonoruiz",
     userImage: "https://res.cloudinary.com/dkem2i0fv/image/upload/v1776021066/perfil_carlos_moxl3j.jpg",
@@ -31,7 +39,7 @@ const COMMUNITY_POSTS = [
     link: "https://www.instagram.com/carlosbuonoruiz/"
   },
   {
-    id: 4,
+    id: 5,
     plataforma: "facebook",
     username: "Pescando X Tamaulipas",
     userImage: "https://res.cloudinary.com/dkem2i0fv/image/upload/v1776023650/475122128_616861480711601_4563349591646411418_n_zlldwe.jpg",
@@ -39,12 +47,20 @@ const COMMUNITY_POSTS = [
     link: "https://www.facebook.com/FiserManSWorld?locale=es_LA"
   },
   {
-    id: 5,
+    id: 6,
     plataforma: "facebook",
     username: "Angel Vazquez",
     userImage: "https://res.cloudinary.com/dkem2i0fv/image/upload/v1776024014/494362281_18273861775264524_6442468200232604641_n_yw48ql.jpg",
     postImage: "https://res.cloudinary.com/dkem2i0fv/image/upload/v1776024015/654808507_915084578011448_8824781392891325949_n_xhdx9p.jpg",
     link: "https://www.facebook.com/angel.vazquez.939862?locale=es_LA"
+  },
+  {
+    id: 7,
+    plataforma: "facebook",
+    username: "J Torres",
+    userImage: "https://res.cloudinary.com/dkem2i0fv/image/upload/v1776236843/548227689_764398456566162_4922236690723613070_n_mrwxpf.jpg",
+    postImage: "https://res.cloudinary.com/dkem2i0fv/image/upload/v1776236843/WhatsApp_Image_2026-04-15_at_1.06.09_AM_jfom8j.jpg",
+    link: "https://www.facebook.com/jesustorresart/?locale=es_LA"
   }
 ];
 

@@ -1,6 +1,7 @@
 // src/utils/calculadoraGeco.ts
 
 export function calcularPrecioYPiezas(modelo: string, talla: string, colorNombre: string, clasificacionColor: string = "Sólido") {
+  // Valores por defecto
   let precio = 115;
   let piezas = 8;
 
@@ -12,17 +13,25 @@ export function calcularPrecioYPiezas(modelo: string, talla: string, colorNombre
 
   // 2. MATRIZ DE PRECIOS SOLO PARA STICKS
   if (nombreModelo.includes('STICK')) {
-    if (tallaLimpia === '3' || tallaLimpia === '3.5') {
-      precio = 100;
+    
+    // Todos los sticks arrancan en 115 por defecto según la nueva regla
+    precio = 115;
+
+    // TAMAÑO 3"
+    if (tallaLimpia === '3') {
       piezas = esLaminado ? 10 : 12;
     } 
+    // TAMAÑO 4" y 5"
     else if (tallaLimpia === '4' || tallaLimpia === '5') {
-      precio = 100;
       piezas = esLaminado ? 8 : 10;
     } 
+    // TAMAÑO 6"
     else if (tallaLimpia === '6') {
       piezas = 8;
-      precio = esLaminado ? 110 : 100;
+      // Solo el laminado de 6" es más caro
+      if (esLaminado) {
+        precio = 125;
+      }
     }
   }
 

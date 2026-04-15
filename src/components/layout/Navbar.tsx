@@ -4,12 +4,13 @@ import { useTheme } from "next-themes";
 import Link from "next/link";
 import Image from "next/image";
 import { useEffect, useState } from "react";
-import { FiSun, FiMoon, FiSearch, FiShoppingCart, FiMenu, FiUser } from "react-icons/fi";
+import { FiSun, FiMoon, FiSearch, FiShoppingCart, FiMenu, FiUser, FiX } from "react-icons/fi"; // <-- Importamos FiX para el botón de cerrar
 
 export default function Navbar() {
   const { theme, setTheme } = useTheme();
   const [mounted, setMounted] = useState(false);
   const [isScrolled, setIsScrolled] = useState(false);
+  const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false); // <-- NUEVO: Estado para el menú móvil
 
   useEffect(() => setMounted(true), []);
 
@@ -30,7 +31,7 @@ export default function Navbar() {
   return (
     <nav 
       className={`fixed top-0 w-full z-50 transition-all duration-300 ${
-        isScrolled 
+        isScrolled || isMobileMenuOpen // <-- Si el menú móvil está abierto, también ponemos el fondo sólido
           ? "bg-white/95 dark:bg-[#0e0e0e]/95 backdrop-blur-md border-b border-gray-200 dark:border-zinc-800 shadow-sm py-0" 
           : "bg-transparent border-transparent py-2"
       }`}
@@ -40,10 +41,16 @@ export default function Navbar() {
           
           {/* 1. LADO IZQUIERDO */}
           <div className="flex-1 flex items-center justify-start">
-            <button className="md:hidden text-gray-900 dark:text-white hover:text-orange-500 transition-colors">
-              <FiMenu className="w-6 h-6" />
+            {/* BOTÓN HAMBURGUESA */}
+            <button 
+              onClick={() => setIsMobileMenuOpen(!isMobileMenuOpen)} // <-- Añadimos el evento onClick
+              className="md:hidden text-gray-900 dark:text-white hover:text-orange-500 transition-colors"
+              aria-label="Abrir menú"
+            >
+              {isMobileMenuOpen ? <FiX className="w-6 h-6" /> : <FiMenu className="w-6 h-6" />}
             </button>
 
+            {/* LINKS ESCRITORIO */}
             <div className="hidden md:flex items-center gap-6 font-display font-bold text-sm tracking-widest uppercase">
               <Link href="/catalogo" className="text-orange-500 border-b-2 border-orange-500 pb-1 transition-colors">
                 Catálogo
@@ -77,7 +84,6 @@ export default function Navbar() {
             {/* NUEVA BARRA DE BÚSQUEDA (Cápsula) */}
             <button className="group flex items-center gap-2 bg-black/5 dark:bg-white/5 hover:bg-black/10 dark:hover:bg-white/10 border border-transparent dark:border-zinc-800 rounded-full px-2 py-2 lg:px-4 lg:py-2 transition-all duration-300">
               <FiSearch className="w-5 h-5 text-gray-900 dark:text-white group-hover:text-orange-500 transition-colors" />
-              {/* Este texto solo aparece en pantallas grandes (lg:block) */}
               <span className="hidden lg:block text-[10px] font-bold uppercase tracking-widest text-gray-500 dark:text-zinc-400 group-hover:text-orange-500 transition-colors whitespace-nowrap">
                 ¿Qué estás buscando?
               </span>
@@ -108,9 +114,48 @@ export default function Navbar() {
               </span>
             </button>
           </div>
-
         </div>
       </div>
+
+      {/* 🚀 NUEVO: MENÚ DESPLEGABLE MÓVIL */}
+      <div 
+        className={`md:hidden absolute top-full left-0 w-full bg-white dark:bg-[#0e0e0e] border-b border-gray-200 dark:border-zinc-800 shadow-xl transition-all duration-300 ease-in-out overflow-hidden ${
+          isMobileMenuOpen ? "max-h-64 opacity-100 py-4" : "max-h-0 opacity-0 py-0"
+        }`}
+      >
+        <div className="flex flex-col px-6 gap-6 font-display font-bold text-sm tracking-widest uppercase">
+          <Link 
+            href="/catalogo" 
+            onClick={() => setIsMobileMenuOpen(false)} // Cierra el menú al hacer clic
+            className="text-orange-500 transition-colors"
+          >
+            Catálogo
+          </Link>
+          <Link 
+            href="/novedades" 
+            onClick={() => setIsMobileMenuOpen(false)}
+            className="text-gray-900 dark:text-white hover:text-orange-500 transition-colors"
+          >
+            Novedades
+          </Link>
+          <Link 
+            href="/team" 
+            onClick={() => setIsMobileMenuOpen(false)}
+            className="text-gray-900 dark:text-white hover:text-orange-500 transition-colors"
+          >
+            Team GECO
+          </Link>
+          
+          <div className="w-full h-px bg-gray-200 dark:bg-zinc-800 my-2"></div>
+          
+          {/* Botón de cuenta para móvil */}
+          <button className="flex items-center gap-3 text-gray-900 dark:text-white hover:text-orange-500 transition-colors w-fit">
+            <FiUser className="w-5 h-5" /> Mi Cuenta
+          </button>
+        </div>
+      </div>
+      {/* FIN MENÚ MÓVIL */}
+
     </nav>
   );
 }
