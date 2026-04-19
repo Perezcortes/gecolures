@@ -113,6 +113,26 @@ export default async function ProductGrid({
     return `/catalogo?${params.toString()}`;
   };
 
+  // 🚀 LÓGICA INTELIGENTE DE PAGINACIÓN
+  const generarPaginacion = (current: number, total: number) => {
+    // Si son 5 páginas o menos, muéstralas todas, no tiene caso colapsar
+    if (total <= 5) {
+      return Array.from({ length: total }, (_, i) => i + 1);
+    }
+    // Si estás en las primeras 3 páginas (Ej: 1, 2, 3, 4 ... 12)
+    if (current <= 3) {
+      return [1, 2, 3, 4, '...', total];
+    }
+    // Si estás en las últimas 3 páginas (Ej: 1 ... 9, 10, 11, 12)
+    if (current >= total - 2) {
+      return [1, '...', total - 3, total - 2, total - 1, total];
+    }
+    // Si estás en medio (Ej: 1 ... 5, 6, 7 ... 12)
+    return [1, '...', current - 1, current, current + 1, '...', total];
+  };
+
+  const paginasMostradas = generarPaginacion(currentPage, totalPages);
+
   return (
     <div className="flex-grow">
       <div className="flex flex-col md:flex-row justify-between items-start md:items-center mb-8 pb-4 border-b border-gray-200 dark:border-zinc-800 gap-4">
@@ -174,17 +194,63 @@ export default async function ProductGrid({
         ))}
       </div>
 
+      {/* 🚀 UI DE PAGINACIÓN REDISEÑADA */}
       {totalPages > 1 && (
         <div className="mt-16 flex justify-center items-center gap-2">
-          {Array.from({ length: totalPages }, (_, i) => i + 1).map((page) => (
+          
+          {/* Botón Anterior */}
+          {currentPage > 1 ? (
             <Link 
-              key={page} 
-              href={getPaginationUrl(page)}
-              className={`w-10 h-10 flex items-center justify-center font-black text-sm border ${currentPage === page ? 'bg-orange-500 text-white border-orange-500' : 'bg-zinc-100 dark:bg-[#121212] border-gray-200 dark:border-zinc-800 text-gray-900 dark:text-white'}`}
+              href={getPaginationUrl(currentPage - 1)} 
+              className="w-10 h-10 flex items-center justify-center bg-white dark:bg-[#121212] border border-gray-200 dark:border-zinc-800 text-gray-900 dark:text-white hover:text-orange-500 hover:border-orange-500 transition-colors rounded-sm"
             >
-              {page}
+              <FiChevronLeft className="w-5 h-5" />
             </Link>
-          ))}
+          ) : (
+            <span className="w-10 h-10 flex items-center justify-center bg-gray-50 dark:bg-[#0a0a0a] border border-gray-200 dark:border-zinc-800 text-gray-400 dark:text-zinc-600 rounded-sm opacity-50 cursor-not-allowed">
+              <FiChevronLeft className="w-5 h-5" />
+            </span>
+          )}
+
+          {/* Números y Puntos Suspensivos */}
+          {paginasMostradas.map((page, index) => {
+            if (page === '...') {
+              return (
+                <span key={`ellipsis-${index}`} className="w-10 h-10 flex items-center justify-center text-gray-500 dark:text-zinc-500 font-black">
+                  ...
+                </span>
+              );
+            }
+
+            return (
+              <Link 
+                key={page} 
+                href={getPaginationUrl(page as number)}
+                className={`w-10 h-10 flex items-center justify-center font-black text-sm border transition-colors rounded-sm ${
+                  currentPage === page 
+                    ? 'bg-orange-500 text-white border-orange-500 shadow-sm' 
+                    : 'bg-white dark:bg-[#121212] border-gray-200 dark:border-zinc-800 text-gray-900 dark:text-white hover:border-orange-500 hover:text-orange-500'
+                }`}
+              >
+                {page}
+              </Link>
+            );
+          })}
+
+          {/* Botón Siguiente */}
+          {currentPage < totalPages ? (
+            <Link 
+              href={getPaginationUrl(currentPage + 1)} 
+              className="w-10 h-10 flex items-center justify-center bg-white dark:bg-[#121212] border border-gray-200 dark:border-zinc-800 text-gray-900 dark:text-white hover:text-orange-500 hover:border-orange-500 transition-colors rounded-sm"
+            >
+              <FiChevronRight className="w-5 h-5" />
+            </Link>
+          ) : (
+            <span className="w-10 h-10 flex items-center justify-center bg-gray-50 dark:bg-[#0a0a0a] border border-gray-200 dark:border-zinc-800 text-gray-400 dark:text-zinc-600 rounded-sm opacity-50 cursor-not-allowed">
+              <FiChevronRight className="w-5 h-5" />
+            </span>
+          )}
+
         </div>
       )}
     </div>
