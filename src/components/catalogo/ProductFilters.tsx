@@ -2,7 +2,7 @@
 
 import { useState, useEffect } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
-import { FiFilter, FiChevronDown, FiChevronRight } from "react-icons/fi";
+import { FiFilter, FiChevronDown, FiX } from "react-icons/fi"; // <-- Importamos FiX
 import { createClient } from "@/utils/supabase/client";
 
 const parseSize = (val: string) => {
@@ -72,7 +72,6 @@ export default function ProductFilters() {
 
     if (params.get(tipo) === valor) {
       params.delete(tipo);
-      // Si desmarcamos la categoría "SEÑUELOS", también limpiamos el modelo
       if (tipo === 'categoria' && valor === 'SEÑUELOS') {
         params.delete('modelo');
       }
@@ -84,6 +83,9 @@ export default function ProductFilters() {
     router.push(`/catalogo?${params.toString()}`, { scroll: false });
   };
 
+  // Verificamos si la búsqueda actual es texto libre (ej. "black") o si es un modelo oficial (ej. "STICK")
+  const esBusquedaLibre = modeloActual && !modelosEncontrados.includes(modeloActual.toUpperCase());
+
   return (
     <aside className="w-full lg:w-64 xl:w-72 flex-shrink-0 space-y-10">
 
@@ -92,14 +94,30 @@ export default function ProductFilters() {
         <span>Filtros del Arsenal</span>
       </div>
 
-      {/* CATEGORÍAS CON DESPLIEGUE JERÁRQUICO */}
+      {/* 🚀 NUEVO: INDICADOR DE BÚSQUEDA LIBRE */}
+      {esBusquedaLibre && (
+        <div className="bg-orange-500/10 border border-orange-500/20 p-4 rounded-md flex items-center justify-between mb-8 animate-in fade-in duration-300">
+          <div>
+            <p className="text-[9px] font-black uppercase tracking-widest text-orange-500 mb-0.5">Buscando coincidencia:</p>
+            <p className="text-sm font-bold text-gray-900 dark:text-white uppercase truncate max-w-[150px]">"{modeloActual}"</p>
+          </div>
+          <button 
+            onClick={() => actualizarFiltro('modelo', modeloActual)} 
+            className="p-2 bg-white dark:bg-[#121212] border border-gray-200 dark:border-zinc-800 rounded text-gray-500 hover:text-orange-500 transition-colors"
+            title="Limpiar búsqueda"
+          >
+            <FiX className="w-4 h-4" />
+          </button>
+        </div>
+      )}
+
+      {/* CATEGORÍAS */}
       <div>
         <h3 className="text-orange-500 font-display font-black text-xl uppercase tracking-tighter mb-4 border-b border-gray-200 dark:border-zinc-800 pb-2">
           Categoría
         </h3>
         <div className="space-y-4">
           {categorias.map((cat) => {
-            // Convertimos ambos a mayúsculas para que la comparación sea exacta
             const nombreCategoria = cat.nombre.toUpperCase();
             const esSeñuelos = nombreCategoria === "SEÑUELOS";
             const estaActivo = categoriaActual.toUpperCase() === "SEÑUELOS";
@@ -110,7 +128,6 @@ export default function ProductFilters() {
                   <label className="flex items-center gap-3 cursor-pointer">
                     <input
                       type="checkbox"
-                      // Aquí también comparamos en mayúsculas para el check
                       checked={categoriaActual.toUpperCase() === nombreCategoria}
                       onChange={() => actualizarFiltro('categoria', cat.nombre)}
                       className="w-4 h-4 bg-zinc-100 dark:bg-[#121212] border-gray-300 dark:border-zinc-700 text-orange-500 focus:ring-orange-500 rounded-sm"
@@ -127,7 +144,7 @@ export default function ProductFilters() {
                   )}
                 </div>
 
-                {/* LISTA DESPLEGABLE */}
+                {/* LISTA DESPLEGABLE DE MODELOS (SOLO SI NO ES BÚSQUEDA LIBRE) */}
                 {esSeñuelos && estaActivo && (
                   <div className="ml-6 mt-4 space-y-2 border-l border-zinc-200 dark:border-zinc-800 pl-4 animate-in slide-in-from-top-2 duration-300">
                     <p className="text-[9px] font-black text-zinc-500 uppercase tracking-[0.2em] mb-3">Modelos</p>
@@ -135,7 +152,7 @@ export default function ProductFilters() {
                       modelosEncontrados.map((tipo) => (
                         <label key={tipo} className="flex items-center gap-2 cursor-pointer group/item">
                           <input
-                            type="checkbox" // Cambiado a checkbox por si quieren ver Sticks y Craws al mismo tiempo
+                            type="checkbox"
                             checked={modeloActual === tipo}
                             onChange={() => actualizarFiltro('modelo', tipo)}
                             className="w-3 h-3 bg-transparent border-zinc-700 text-orange-500 rounded-xs"

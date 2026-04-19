@@ -140,7 +140,7 @@ export default function ProductInfo({ producto, colores, tallas }: ProductInfoPr
       {producto.squad_tip && (
         <div className="bg-zinc-50 dark:bg-[#121212] p-5 border border-gray-200 dark:border-zinc-800 rounded mb-8">
           <h4 className="font-display font-black text-[10px] uppercase tracking-widest mb-2 flex items-center gap-1.5 text-orange-500">
-            <span className="material-symbols-outlined text-sm">military_tech</span>
+            <span className="material-symbols-outlined text-sm">Recomendación</span>
             GECO TIP
           </h4>
           <p className="text-xs text-gray-600 dark:text-zinc-400 leading-relaxed font-medium italic">

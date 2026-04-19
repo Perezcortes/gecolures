@@ -51,7 +51,8 @@ export default async function ProductGrid({
     query = query.eq('producto_variantes.colores.nombre', color);
   }
   if (modelo) {
-    query = query.ilike('nombre', `${modelo}%`);
+    // Poner el % en ambos lados significa "Que CONTENGA esta palabra en cualquier parte"
+    query = query.ilike('nombre', `%${modelo}%`); 
   }
 
   const { data: rawProducts, count } = await query

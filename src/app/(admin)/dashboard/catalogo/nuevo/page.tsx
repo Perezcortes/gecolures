@@ -33,7 +33,7 @@ export default function NuevoProductoMaestroPage() {
     const [imagenSenueloUrl, setImagenSenueloUrl] = useState("");
     const [imagenSwatchUrl, setImagenSwatchUrl] = useState("");
     const [colorInput, setColorInput] = useState("");
-    const [clasificacionColor, setClasificacionColor] = useState("Sólido"); // <-- NUEVO ESTADO
+    const [clasificacionColor, setClasificacionColor] = useState("Sólido"); 
     const [tallasSeleccionadas, setTallasSeleccionadas] = useState<string[]>([]);
     const [nuevaTallaInput, setNuevaTallaInput] = useState("");
 
@@ -109,7 +109,6 @@ export default function NuevoProductoMaestroPage() {
             let finalColorId = coloresBD.find(c => c.nombre.toLowerCase() === colorInput.trim().toLowerCase())?.id;
 
             if (!finalColorId) {
-                // 🚀 AQUÍ GUARDAMOS LA NUEVA CLASIFICACIÓN EN LA BD
                 const { data: nuevoColor, error: errColor } = await supabase
                     .from("colores")
                     .insert([{ nombre: colorInput.trim(), swatch_url: imagenSwatchUrl, clasificacion: clasificacionColor }])
@@ -120,13 +119,33 @@ export default function NuevoProductoMaestroPage() {
                 await supabase.from("colores").update({ swatch_url: imagenSwatchUrl, clasificacion: clasificacionColor }).eq("id", finalColorId);
             }
 
+            // 🚀 AQUI ESTÁ LA MAGIA DEL NUEVO GENERADOR DE SKU
             const nuevasVariantes = tallasSeleccionadas.map(tallaId => {
                 const tallaObj = tallasBD.find(t => t.id === tallaId);
                 const skuTalla = tallaObj?.valor.replace(/[^a-zA-Z0-9]/g, '') || 'X';
-                const slugC = colorInput.substring(0, 3).toUpperCase();
+                
+                // Generar iniciales del color (Ej: "Watermelon Red" -> "WR", "Plum" -> "PLU")
+                const palabrasColor = colorInput.trim().split(' ');
+                let slugC = "";
+                if (palabrasColor.length > 1) {
+                    slugC = palabrasColor.map(p => p[0]).join('').substring(0, 3).toUpperCase();
+                } else {
+                    slugC = colorInput.substring(0, 3).toUpperCase();
+                }
+
+                // Generar un sufijo alfanumérico ÚNICO de 4 caracteres (Ej: "A7X9")
+                const sufijoUnico = Math.random().toString(36).substring(2, 6).toUpperCase();
+
+                // SKU Final Inquebrantable
+                const skuGenerado = `GEC-${slugP.substring(0, 3).toUpperCase()}-${slugC}-${skuTalla}-${sufijoUnico}`;
+
                 return {
-                    producto_id: productoGeneradoId, color_id: finalColorId, especificacion_id: tallaId,
-                    stock: 999, imagen_principal_url: imagenSenueloUrl, sku: `GEC-${slugP.substring(0, 3).toUpperCase()}-${slugC}-${skuTalla}-${Math.floor(Math.random() * 100)}`
+                    producto_id: productoGeneradoId, 
+                    color_id: finalColorId, 
+                    especificacion_id: tallaId,
+                    stock: 999, 
+                    imagen_principal_url: imagenSenueloUrl, 
+                    sku: skuGenerado
                 };
             });
 
@@ -148,7 +167,7 @@ export default function NuevoProductoMaestroPage() {
         const colorExistente = coloresBD.find(c => c.nombre.toLowerCase() === val.toLowerCase());
         if (colorExistente) {
             setImagenSwatchUrl(colorExistente.swatch_url);
-            setClasificacionColor(colorExistente.clasificacion || "Sólido"); // Carga automática de la clasificación
+            setClasificacionColor(colorExistente.clasificacion || "Sólido");
         }
     };
 
@@ -231,7 +250,6 @@ export default function NuevoProductoMaestroPage() {
                                     <datalist id="lista-colores-base">{coloresBD.map(c => <option key={c.id} value={c.nombre} />)}</datalist>
                                 </div>
                                 
-                                {/* 🚀 NUEVO SELECTOR DE CLASIFICACIÓN */}
                                 <div className="space-y-2">
                                     <label className="text-[10px] font-bold uppercase tracking-widest text-gray-500 dark:text-zinc-400">Clasificación <span className="text-orange-500">*</span></label>
                                     <select value={clasificacionColor} onChange={(e) => setClasificacionColor(e.target.value)} className="w-full bg-white dark:bg-[#121212] border border-gray-200 dark:border-zinc-800 p-2.5 rounded text-sm font-bold text-gray-900 dark:text-white focus:outline-none focus:border-orange-500">
