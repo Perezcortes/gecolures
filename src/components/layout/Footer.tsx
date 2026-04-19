@@ -1,10 +1,14 @@
 import Link from "next/link";
-import Image from "next/image"; // <-- 1. Importamos Image de Next.js
-import { FiFacebook, FiInstagram, FiYoutube } from "react-icons/fi";
+import Image from "next/image"; 
+import { FiFacebook, FiInstagram, FiYoutube, FiCode } from "react-icons/fi";
+import { FaWhatsapp } from "react-icons/fa"; 
 
 export default function Footer() {
+  const whatsappUrl = "https://wa.me/529531447499?text=Hola%20José,%20me%20interesa%20un%20proyecto%20web.";
+
   return (
-    <footer className="w-full bg-[#0a0a0a] text-white pt-16 pb-8 border-t border-zinc-800">
+    // 🚀 Redujimos el padding inferior del footer (pb-2) para que todo se pegue más abajo
+    <footer className="w-full bg-[#0a0a0a] text-white pt-16 pb-2 border-t border-zinc-800">
       <div className="max-w-7xl mx-auto px-6">
 
         {/* Newsletter Section */}
@@ -29,7 +33,7 @@ export default function Footer() {
 
         <div className="h-px w-full bg-zinc-800 mb-16"></div>
 
-        {/* Links Grid - Manteniendo la estructura de 2 columnas para celular */}
+        {/* Links Grid */}
         <div className="grid grid-cols-2 lg:grid-cols-4 gap-x-4 gap-y-10 lg:gap-8 mb-16 font-display uppercase text-left">
           <div className="flex flex-col gap-4">
             <h4 className="font-black text-sm tracking-widest text-orange-500 mb-2">TACKLE</h4>
@@ -58,17 +62,15 @@ export default function Footer() {
         </div>
 
         {/* Bottom Section - El hogar del Logo Original */}
-        <div className="flex flex-col md:flex-row justify-between items-center gap-8 pt-8 border-t border-zinc-800">
+        <div className="flex flex-col md:flex-row justify-between items-center gap-8 py-8 border-t border-zinc-800">
           
           <div className="flex flex-col md:flex-row items-center gap-4 md:gap-6 text-center md:text-left">
-            
             <Link href="/" className="flex items-center justify-center md:justify-start hover:scale-105 transition-transform duration-300">
               <Image
-                src="/logo_geco.png" // Asegúrate de que la extensión sea correcta
+                src="/logo_geco.png" 
                 alt="GECO Lures Logo Original"
-                width={320} // Mantenemos la resolución base
+                width={320} 
                 height={180}  
-                // 🚀 AJUSTE CLAVE: Reducimos de h-24 a h-16 en celular y h-32 a h-24 en escritorio.
                 className="w-auto h-16 md:h-24 object-contain drop-shadow-lg"
               />
             </Link>
@@ -76,7 +78,6 @@ export default function Footer() {
             <span className="text-zinc-500 text-[10px] sm:text-xs font-bold uppercase tracking-widest mt-2 md:mt-0 max-w-xs">
               © {new Date().getFullYear()} GECO LURES. All Rights Reserved.
             </span>
-            
           </div>
 
           <div className="flex gap-8 md:gap-6 mt-2 md:mt-0">
@@ -84,9 +85,23 @@ export default function Footer() {
             <a href="#" className="text-zinc-400 hover:text-orange-500 transition-colors"><FiInstagram className="w-6 h-6 md:w-5 md:h-5" /></a>
             <a href="#" className="text-zinc-400 hover:text-orange-500 transition-colors"><FiYoutube className="w-6 h-6 md:w-5 md:h-5" /></a>
           </div>
-          
         </div>
       </div>
+
+      {/* 🚀 SIGNATURA NINJA (Fuera del contenedor principal para que se pegue al fondo absoluto) */}
+      <div className="w-full flex justify-center items-center pb-2 opacity-60 hover:opacity-100 transition-opacity duration-500">
+        <a 
+          href={whatsappUrl}
+          target="_blank" 
+          rel="noopener noreferrer"
+          className="flex items-center gap-1.5 text-[8px] sm:text-[9px] font-medium uppercase tracking-[0.2em] text-zinc-600 hover:text-green-500 transition-colors"
+        >
+          <FiCode className="w-2.5 h-2.5" />
+          <span>Desarrollado por: José Pérez</span>
+          <FaWhatsapp className="w-3 h-3 ml-0.5" />
+        </a>
+      </div>
+
     </footer>
   );
 }
