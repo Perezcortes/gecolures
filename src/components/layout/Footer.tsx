@@ -1,7 +1,7 @@
 import Link from "next/link";
-import Image from "next/image"; 
+import Image from "next/image";
 import { FiFacebook, FiInstagram, FiYoutube, FiCode } from "react-icons/fi";
-import { FaWhatsapp } from "react-icons/fa"; 
+import { FaWhatsapp } from "react-icons/fa";
 
 export default function Footer() {
   const whatsappUrl = "https://wa.me/529531447499?text=Hola%20José,%20me%20interesa%20un%20proyecto%20web.";
@@ -49,28 +49,27 @@ export default function Footer() {
           </div>
           <div className="flex flex-col gap-4">
             <h4 className="font-black text-sm tracking-widest text-orange-500 mb-2">SOPORTE</h4>
-            <Link href="#" className="text-xs text-zinc-400 hover:text-white transition-colors">Contacto</Link>
-            <Link href="#" className="text-xs text-zinc-400 hover:text-white transition-colors">Envíos y Entregas</Link>
-            <Link href="#" className="text-xs text-zinc-400 hover:text-white transition-colors">WhatsApp Directo</Link>
+            <Link href="/contacto" className="text-xs text-zinc-400 hover:text-white transition-colors">Contacto</Link>
+            <Link href="/faq" className="text-xs text-zinc-400 hover:text-white transition-colors">Preguntas Frecuentes</Link>
           </div>
           <div className="flex flex-col gap-4">
             <h4 className="font-black text-sm tracking-widest text-orange-500 mb-2">LA EMPRESA</h4>
-            <Link href="/equipo" className="text-xs text-zinc-400 hover:text-white transition-colors">Team GECO</Link>
-            <Link href="#" className="text-xs text-zinc-400 hover:text-white transition-colors">Distribuidores</Link>
-            <Link href="#" className="text-xs text-zinc-400 hover:text-white transition-colors">Políticas de Privacidad</Link>
+            <Link href="/team" className="text-xs text-zinc-400 hover:text-white transition-colors">Team GECO</Link>
+            <Link href="/privacidad" className="text-xs text-zinc-400 hover:text-white transition-colors">Políticas de Privacidad</Link>
+            <Link href="/terminos" className="text-xs text-zinc-400 hover:text-white transition-colors">Términos y Condiciones</Link>
           </div>
         </div>
 
         {/* Bottom Section - El hogar del Logo Original */}
         <div className="flex flex-col md:flex-row justify-between items-center gap-8 py-8 border-t border-zinc-800">
-          
+
           <div className="flex flex-col md:flex-row items-center gap-4 md:gap-6 text-center md:text-left">
             <Link href="/" className="flex items-center justify-center md:justify-start hover:scale-105 transition-transform duration-300">
               <Image
-                src="/logo_geco.png" 
+                src="/logo_geco.png"
                 alt="GECO Lures Logo Original"
-                width={320} 
-                height={180}  
+                width={320}
+                height={180}
                 className="w-auto h-16 md:h-24 object-contain drop-shadow-lg"
               />
             </Link>
@@ -81,18 +80,30 @@ export default function Footer() {
           </div>
 
           <div className="flex gap-8 md:gap-6 mt-2 md:mt-0">
-            <a href="#" className="text-zinc-400 hover:text-orange-500 transition-colors"><FiFacebook className="w-6 h-6 md:w-5 md:h-5" /></a>
-            <a href="#" className="text-zinc-400 hover:text-orange-500 transition-colors"><FiInstagram className="w-6 h-6 md:w-5 md:h-5" /></a>
-            <a href="#" className="text-zinc-400 hover:text-orange-500 transition-colors"><FiYoutube className="w-6 h-6 md:w-5 md:h-5" /></a>
+            <a
+              href="https://www.facebook.com/gecolures"
+              target="_blank"
+              rel="noopener noreferrer"
+              className="text-zinc-400 hover:text-orange-500 transition-colors"
+            >
+              <FiFacebook className="w-6 h-6 md:w-5 md:h-5" />
+            </a>
+
+            {/* <a href="#" target="_blank" rel="noopener noreferrer" className="text-zinc-400 hover:text-orange-500 transition-colors">
+              <FiInstagram className="w-6 h-6 md:w-5 md:h-5" />
+            </a>
+            <a href="#" target="_blank" rel="noopener noreferrer" className="text-zinc-400 hover:text-orange-500 transition-colors">
+              <FiYoutube className="w-6 h-6 md:w-5 md:h-5" />
+            </a>
+            */}
           </div>
         </div>
       </div>
 
-      {/* 🚀 SIGNATURA NINJA (Fuera del contenedor principal para que se pegue al fondo absoluto) */}
       <div className="w-full flex justify-center items-center pb-2 opacity-60 hover:opacity-100 transition-opacity duration-500">
-        <a 
+        <a
           href={whatsappUrl}
-          target="_blank" 
+          target="_blank"
           rel="noopener noreferrer"
           className="flex items-center gap-1.5 text-[8px] sm:text-[9px] font-medium uppercase tracking-[0.2em] text-zinc-600 hover:text-green-500 transition-colors"
         >

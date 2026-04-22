@@ -55,7 +55,7 @@ export default function Navbar() {
 
               <div className="hidden md:flex items-center gap-6 font-display font-bold text-sm tracking-widest uppercase">
                 <Link href="/catalogo" className="text-orange-500 border-b-2 border-orange-500 pb-1 transition-colors">Catálogo</Link>
-                <Link href="/novedades" className="text-gray-700 dark:text-gray-300 hover:text-orange-500 dark:hover:text-orange-500 transition-colors drop-shadow-sm">Novedades</Link>
+                {/*<Link href="/novedades" className="text-gray-700 dark:text-gray-300 hover:text-orange-500 dark:hover:text-orange-500 transition-colors drop-shadow-sm">Novedades</Link>*/}
                 <Link href="/team" className="text-gray-700 dark:text-gray-300 hover:text-orange-500 dark:hover:text-orange-500 transition-colors drop-shadow-sm">Team GECO</Link>
               </div>
             </div>

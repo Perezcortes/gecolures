@@ -3,6 +3,7 @@ import NuevosLanzamientos from "@/components/home/NuevosLanzamientos";
 import GecoNation from "@/components/home/GecoNation";
 import FeaturedActionCards from "@/components/home/FeaturedActionCards";
 import AnimatedMarquee from "@/components/home/AnimatedMarquee";
+import HistorySection from "@/components/home/HistorySection";
 import Image from "next/image"; // <-- Importamos Image de Next.js
 
 export default function Home() {
@@ -13,6 +14,8 @@ export default function Home() {
       <HeroCarousel />
 
       <NuevosLanzamientos />
+
+      <HistorySection />
 
       <FeaturedActionCards />
 

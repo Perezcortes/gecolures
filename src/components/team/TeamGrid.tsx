@@ -96,14 +96,6 @@ export default function GecoNation() {
         </h2>
         <div className="flex items-center justify-center gap-4">
           <a 
-            href="https://instagram.com/gecolures" 
-            target="_blank" 
-            rel="noreferrer"
-            className="flex items-center gap-2 bg-black dark:bg-white text-white dark:text-black font-display font-bold text-xs uppercase tracking-widest px-4 py-2 rounded-sm hover:bg-orange-500 dark:hover:bg-orange-500 hover:text-white transition-colors"
-          >
-            <FiInstagram className="w-4 h-4" /> @GecoLures
-          </a>
-          <a 
             href="https://facebook.com/gecolures" 
             target="_blank" 
             rel="noreferrer"

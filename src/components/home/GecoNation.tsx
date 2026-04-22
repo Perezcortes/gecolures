@@ -1,8 +1,8 @@
-"use client"; // <-- IMPORTANTE: Necesario para usar animaciones en tiempo real en Next.js
+"use client"; 
 
 import { useRef, useEffect } from "react";
 import Image from "next/image";
-import { FiInstagram, FiFacebook } from "react-icons/fi";
+import { FiInstagram, FiFacebook, FiYoutube, FiPlayCircle } from "react-icons/fi"; // <-- Importamos FiPlayCircle para darle un toque extra de video
 
 // Datos de prueba: Mezcla de capturas de Instagram y Facebook
 const COMMUNITY_POSTS = [
@@ -61,30 +61,50 @@ const COMMUNITY_POSTS = [
     userImage: "https://res.cloudinary.com/dkem2i0fv/image/upload/v1776236843/548227689_764398456566162_4922236690723613070_n_mrwxpf.jpg",
     postImage: "https://res.cloudinary.com/dkem2i0fv/image/upload/v1776236843/WhatsApp_Image_2026-04-15_at_1.06.09_AM_jfom8j.jpg",
     link: "https://www.facebook.com/jesustorresart/?locale=es_LA"
+  },
+  {
+    id: 8,
+    plataforma: "youtube",
+    username: "PONCHITO'S BASS CLUB",
+    userImage: "https://res.cloudinary.com/dkem2i0fv/image/upload/v1776834355/channels4_profile_isr7hp.jpg",
+    postImage: "https://img.youtube.com/vi/WGswMRJUIgw/maxresdefault.jpg",
+    link: "https://youtu.be/WGswMRJUIgw"
+  },
+  {
+    id: 9,
+    plataforma: "youtube",
+    username: "Anglers Tv",
+    userImage: "https://res.cloudinary.com/dkem2i0fv/image/upload/v1776834710/unnamed_kp4gc9.jpg",
+    postImage: "https://img.youtube.com/vi/lnkMMnhAPhY/maxresdefault.jpg",
+    link: "https://youtu.be/lnkMMnhAPhY"
+  },
+  {
+    id: 10,
+    plataforma: "youtube",
+    username: "Anglers Tv",
+    userImage: "https://res.cloudinary.com/dkem2i0fv/image/upload/v1776834710/unnamed_kp4gc9.jpg",
+    postImage: "https://img.youtube.com/vi/dZ2iWb1QU5o/maxresdefault.jpg",
+    link: "https://youtu.be/dZ2iWb1QU5o"
   }
 ];
 
 export default function GecoNation() {
-  // Referencia al contenedor que hace scroll
   const scrollRef = useRef<HTMLDivElement>(null);
 
-  // Lógica de Auto-Play
   useEffect(() => {
     const interval = setInterval(() => {
       if (scrollRef.current) {
         const { scrollLeft, scrollWidth, clientWidth } = scrollRef.current;
         
-        // Si llegamos al final del carrusel, lo regresamos al inicio
         if (scrollLeft + clientWidth >= scrollWidth - 10) {
           scrollRef.current.scrollTo({ left: 0, behavior: "smooth" });
         } else {
-          // Si no, avanzamos el ancho de una tarjeta aproximadamente
           scrollRef.current.scrollBy({ left: 300, behavior: "smooth" });
         }
       }
-    }, 3000); // 3000 ms = Pasa cada 3 segundos (puedes ajustarlo)
+    }, 3000); 
 
-    return () => clearInterval(interval); // Limpiamos el intervalo si sales de la página
+    return () => clearInterval(interval); 
   }, []);
 
   return (
@@ -94,27 +114,20 @@ export default function GecoNation() {
         <h2 className="text-4xl md:text-6xl font-display font-black uppercase tracking-tighter text-gray-900 dark:text-white mb-4">
           CAPTURAS DE LA FAMILIA GECO
         </h2>
-        <div className="flex items-center justify-center gap-4">
-          <a 
-            href="https://instagram.com/gecolures" 
-            target="_blank" 
-            rel="noreferrer"
-            className="flex items-center gap-2 bg-black dark:bg-white text-white dark:text-black font-display font-bold text-xs uppercase tracking-widest px-4 py-2 rounded-sm hover:bg-orange-500 dark:hover:bg-orange-500 hover:text-white transition-colors"
-          >
-            <FiInstagram className="w-4 h-4" /> @GecoLures
-          </a>
+        
+        <div className="flex flex-wrap items-center justify-center gap-3 md:gap-4">
           <a 
             href="https://facebook.com/gecolures" 
             target="_blank" 
             rel="noreferrer"
-            className="flex items-center gap-2 bg-[#1877F2] text-white font-display font-bold text-xs uppercase tracking-widest px-4 py-2 rounded-sm hover:bg-[#0c5bce] transition-colors"
+            className="flex items-center gap-2 bg-[#1877F2] text-white font-display font-bold text-[10px] md:text-xs uppercase tracking-widest px-4 py-2 rounded-sm hover:bg-[#0c5bce] transition-colors"
           >
-            <FiFacebook className="w-4 h-4" /> Geco Lures
+            <FiFacebook className="w-4 h-4 md:w-4 md:h-4" /> Geco Lures
           </a>
         </div>
       </div>
 
-      {/* CARRUSEL DE FOTOS MIXTAS (Agregamos el ref aquí) */}
+      {/* CARRUSEL DE FOTOS MIXTAS */}
       <div 
         ref={scrollRef}
         className="flex gap-4 px-4 md:px-8 overflow-x-auto snap-x snap-mandatory scrollbar-hide pb-8"
@@ -135,11 +148,18 @@ export default function GecoNation() {
               className="object-cover group-hover:scale-105 transition-transform duration-700" 
             />
             
+            {/* 🚀 NUEVO: Un ícono de "Play" al centro si la plataforma es YouTube, para que la gente sepa que es un video */}
+            {post.plataforma === 'youtube' && (
+              <div className="absolute inset-0 flex items-center justify-center z-20 pointer-events-none">
+                <FiPlayCircle className="w-12 h-12 text-white opacity-80 group-hover:opacity-100 group-hover:scale-110 group-hover:text-orange-500 transition-all duration-300 drop-shadow-md" />
+              </div>
+            )}
+
             {/* Gradiente oscuro inferior */}
             <div className="absolute inset-x-0 bottom-0 h-1/2 bg-gradient-to-t from-black/90 via-black/40 to-transparent pointer-events-none"></div>
 
-            {/* Barra Inferior: Foto de perfil, usuario e ícono Dinámico */}
-            <div className="absolute bottom-0 left-0 right-0 p-4 flex items-center justify-between z-10">
+            {/* Barra Inferior */}
+            <div className="absolute bottom-0 left-0 right-0 p-4 flex items-center justify-between z-30">
               <div className="flex items-center gap-3 overflow-hidden">
                 <div className="relative w-8 h-8 flex-shrink-0 rounded-full overflow-hidden border border-white/20">
                   <Image 
@@ -154,12 +174,11 @@ export default function GecoNation() {
                 </span>
               </div>
               
+              {/* 🚀 LÓGICA DE ÍCONOS ACTUALIZADA */}
               <div className="flex-shrink-0 ml-2">
-                {post.plataforma === 'instagram' ? (
-                  <FiInstagram className="w-5 h-5 text-white/80 group-hover:text-white transition-colors" />
-                ) : (
-                  <FiFacebook className="w-5 h-5 text-[#1877F2] group-hover:text-white transition-colors" />
-                )}
+                {post.plataforma === 'instagram' && <FiInstagram className="w-5 h-5 text-white/80 group-hover:text-white transition-colors" />}
+                {post.plataforma === 'facebook' && <FiFacebook className="w-5 h-5 text-[#1877F2] group-hover:text-white transition-colors" />}
+                {post.plataforma === 'youtube' && <FiYoutube className="w-5 h-5 text-[#FF0000] group-hover:text-white transition-colors" />}
               </div>
             </div>
           </a>
