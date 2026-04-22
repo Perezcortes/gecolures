@@ -11,10 +11,10 @@ type AccordionProps = {
 export default function ProductAccordion({ descripcion, piezas }: AccordionProps) {
   const [openIndex, setOpenIndex] = useState<number | null>(0);
 
-  // 🚀 Lógica automática para el texto del paquete
-  const textoPaquete = piezas 
-    ? `Este empaque contiene ${piezas} piezas.\n\nPlásticos suaves de grado táctico, infundidos con sal y nuestra esencia atrayente exclusiva para maximizar el tiempo de retención en la mordida.`
-    : "Plásticos suaves de grado táctico, infundidos con sal y nuestra esencia atrayente exclusiva para maximizar el tiempo de retención en la mordida.";
+  // Lógica automática para el texto del paquete
+  const textoPaquete = piezas
+    ? `Este empaque contiene ${piezas} piezas.\n\nDesde Ciudad Victoria con 28 años de experiencia. Plásticos de grado profesional con densidad controlada para un movimiento irresistible bajo el agua.`
+    : "Desde Ciudad Victoria con 28 años de experiencia. Plásticos de grado profesional con densidad controlada para un movimiento irresistible bajo el agua.";
 
   const specs = [
     {
@@ -27,7 +27,7 @@ export default function ProductAccordion({ descripcion, piezas }: AccordionProps
     },
     {
       title: "ENVÍOS Y DEVOLUCIONES",
-      content: "Envío gratis en pedidos mayores a $899 MXN. Despachamos en 24 horas hábiles desde nuestra base táctica. Tienes 30 días para devoluciones si el empaque original no ha sido abierto."
+      content: "Enviamos a toda la República vía Estafeta, DHL o FedEx. El costo se calcula según tu C.P. para garantizar la mejor tarifa. Por seguridad y calidad, documentamos fotográficamente cada pedido antes del envío. Solo aceptamos cambios por errores de despacho reportados dentro de las primeras 48 horas con el empaque sellado."
     }
   ];
 
@@ -50,7 +50,7 @@ export default function ProductAccordion({ descripcion, piezas }: AccordionProps
               {openIndex === index ? <FiMinus className="w-5 h-5" /> : <FiPlus className="w-5 h-5" />}
             </span>
           </button>
-          
+
           <div className={`overflow-hidden transition-all duration-300 ease-in-out ${openIndex === index ? 'max-h-96 pb-6 opacity-100' : 'max-h-0 opacity-0'}`}>
             <p className="text-sm text-gray-600 dark:text-zinc-400 leading-relaxed font-medium whitespace-pre-line">
               {item.content}
