@@ -25,6 +25,25 @@ export default async function ProductGrid({
   const from = (currentPage - 1) * ITEMS_PER_PAGE;
   const to = from + ITEMS_PER_PAGE - 1;
 
+  // 🚀 1. NORMALIZACIÓN TÁCTICA DEL MODELO (Igual que en el SearchModal)
+  let terminoLimpio = modelo.toLowerCase().trim();
+  
+  const diccionario: { [key: string]: string } = {
+    "senko": "stick",
+    "zenko": "stick",
+    "cenko": "stick",
+    "sticks": "stick",
+    "craws": "craw",
+    "lizards": "lizard",
+    "worms": "worm",
+    "lombriz": "worm",
+    "lombrices": "worm"
+  };
+
+  if (diccionario[terminoLimpio]) {
+    terminoLimpio = diccionario[terminoLimpio];
+  }
+
   let query = supabase
     .from("productos")
     .select(`
@@ -50,9 +69,11 @@ export default async function ProductGrid({
   if (color) {
     query = query.eq('producto_variantes.colores.nombre', color);
   }
-  if (modelo) {
-    // Poner el % en ambos lados significa "Que CONTENGA esta palabra en cualquier parte"
-    query = query.ilike('nombre', `%${modelo}%`); 
+  
+  // 🚀 2. BÚSQUEDA FLEXIBLE
+  // Usamos terminoLimpio (la raíz de la palabra) para que encuentre coincidencias
+  if (terminoLimpio) {
+    query = query.ilike('nombre', `%${terminoLimpio}%`); 
   }
 
   const { data: rawProducts, count } = await query
@@ -62,6 +83,7 @@ export default async function ProductGrid({
 
   const totalPages = Math.ceil((count || 0) / ITEMS_PER_PAGE);
 
+  // ... (Toda tu lógica de mapeo de productos se mantiene igual)
   const productosFormateados = (rawProducts || []).map((prod: any) => {
     const coloresUnicos = new Map();
     let imagenPrincipal: string | null = null;
@@ -109,25 +131,15 @@ export default async function ProductGrid({
     if (categoria) params.set('categoria', categoria);
     if (talla) params.set('talla', talla);
     if (color) params.set('color', color);
-    if (modelo) params.set('modelo', modelo);
+    if (modelo) params.set('modelo', modelo); // Mantenemos el término original en la URL
     return `/catalogo?${params.toString()}`;
   };
 
-  // 🚀 LÓGICA INTELIGENTE DE PAGINACIÓN
+  // ... (Resto de tu lógica de paginación y renderizado se mantiene igual)
   const generarPaginacion = (current: number, total: number) => {
-    // Si son 5 páginas o menos, muéstralas todas, no tiene caso colapsar
-    if (total <= 5) {
-      return Array.from({ length: total }, (_, i) => i + 1);
-    }
-    // Si estás en las primeras 3 páginas (Ej: 1, 2, 3, 4 ... 12)
-    if (current <= 3) {
-      return [1, 2, 3, 4, '...', total];
-    }
-    // Si estás en las últimas 3 páginas (Ej: 1 ... 9, 10, 11, 12)
-    if (current >= total - 2) {
-      return [1, '...', total - 3, total - 2, total - 1, total];
-    }
-    // Si estás en medio (Ej: 1 ... 5, 6, 7 ... 12)
+    if (total <= 5) return Array.from({ length: total }, (_, i) => i + 1);
+    if (current <= 3) return [1, 2, 3, 4, '...', total];
+    if (current >= total - 2) return [1, '...', total - 3, total - 2, total - 1, total];
     return [1, '...', current - 1, current, current + 1, '...', total];
   };
 
@@ -135,6 +147,7 @@ export default async function ProductGrid({
 
   return (
     <div className="flex-grow">
+      {/* ... (Todo tu JSX de renderizado se mantiene idéntico) */}
       <div className="flex flex-col md:flex-row justify-between items-start md:items-center mb-8 pb-4 border-b border-gray-200 dark:border-zinc-800 gap-4">
         <span className="font-bold text-xs uppercase tracking-widest text-gray-500 dark:text-zinc-400">
           {count === 0 ? "Sin resultados" : `Mostrando ${from + 1} - ${Math.min(to + 1, count || 0)} de ${count} señuelos`}
@@ -171,14 +184,12 @@ export default async function ProductGrid({
               <h3 className="font-display font-black text-sm md:text-xl uppercase tracking-tighter text-gray-900 dark:text-white group-hover:text-orange-500 transition-colors mb-1">
                 {product.name}
               </h3>
-              
               <div className="flex flex-wrap items-center gap-2 mb-4">
                 <p className="text-orange-500 font-display font-bold text-sm md:text-lg">{product.price}</p>
                 <span className="text-[9px] font-black uppercase text-zinc-500 bg-zinc-200 dark:bg-zinc-800 px-2 py-0.5 rounded-sm">
                   {product.piezas}
                 </span>
               </div>
-
               <div className="mt-auto pt-4 border-t border-zinc-200 dark:border-zinc-800/50 flex items-center justify-between">
                 <p className="text-[9px] font-black text-zinc-500 uppercase tracking-widest">
                   {product.colores.length === 1 ? "COLOR ÚNICO" : `${product.colores.length} COLORES`}
@@ -193,6 +204,13 @@ export default async function ProductGrid({
           </Link>
         ))}
       </div>
+
+      {/* Paginación (Sigue igual) */}
+      {totalPages > 1 && (
+        <div className="mt-16 flex justify-center items-center gap-2">
+          {/* ... (Contenido de paginación que ya tenías) */}
+        </div>
+      )}
 
       {/* 🚀 UI DE PAGINACIÓN REDISEÑADA */}
       {totalPages > 1 && (

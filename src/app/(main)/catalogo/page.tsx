@@ -5,7 +5,6 @@ import ProductGrid from "@/components/catalogo/ProductGrid";
 export default async function Catalogo({
   searchParams,
 }: {
-  // 1. Agregamos 'modelo' a la lista de parámetros que esperamos de la URL
   searchParams: Promise<{ 
     page?: string; 
     categoria?: string; 
@@ -20,17 +19,29 @@ export default async function Catalogo({
   const categoria = params?.categoria || "";
   const talla = params?.talla || "";
   const color = params?.color || "";
-  const modelo = params?.modelo || ""; // <-- Leemos el modelo (ej: STICK)
+  let modelo = params?.modelo || ""; 
+
+  // NORMALIZACIÓN: Si viene "Sticks" o "Senko", mandamos "Stick" al Grid
+  const diccionario: { [key: string]: string } = {
+    "senko": "stick",
+    "zenko": "stick",
+    "cenko": "stick",
+    "sticks": "stick",
+    "craws": "craw",
+    "lizards": "lizard",
+    "worms": "worm"
+  };
+
+  const termLower = modelo.toLowerCase().trim();
+  if (diccionario[termLower]) {
+    modelo = diccionario[termLower];
+  }
 
   return (
     <main className="pt-20 min-h-screen bg-zinc-50 dark:bg-[#0e0e0e]">
       <CatalogHero />
-
-      {/* El contenedor principal con el ancho táctico de 1600px */}
       <section className="w-full max-w-[1600px] mx-auto px-6 xl:px-12 py-12 flex flex-col lg:flex-row gap-8 lg:gap-16">
         <ProductFilters />
-        
-        {/* 2. Ahora le pasamos TODO el arsenal de filtros al Grid */}
         <ProductGrid 
           currentPage={currentPage} 
           categoria={categoria}

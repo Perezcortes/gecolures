@@ -58,7 +58,31 @@ export default function SearchModal({ isOpen, onClose }: SearchModalProps) {
         .eq('is_active', true);
 
       if (term.trim() !== "") {
-        query = query.ilike('nombre', `%${term}%`);
+        // 🚀 NORMALIZACIÓN TÁCTICA DE BÚSQUEDA
+        let searchFor = term.toLowerCase().trim();
+        
+        // Diccionario de sinónimos y correcciones de plurales
+        const diccionario: { [key: string]: string } = {
+          "senko": "stick",
+          "zenko": "stick",
+          "cenko": "stick",
+          "sticks": "stick",
+          "craws": "craw",
+          "lizards": "lizard",
+          "worms": "worm",
+          "lombriz": "worm",
+          "lombrices": "worm",
+          "criaturas": "craw",
+          "paletones": "crankbait"
+        };
+
+        // Si la palabra exacta existe en el diccionario, la cambiamos por la raíz
+        if (diccionario[searchFor]) {
+          searchFor = diccionario[searchFor];
+        }
+
+        // Buscamos coincidencias parciales (ilike permite ignorar Mayúsculas/Minúsculas)
+        query = query.ilike('nombre', `%${searchFor}%`);
       }
 
       const { data, error } = await query.order('created_at', { ascending: false }).limit(4);
@@ -107,23 +131,20 @@ export default function SearchModal({ isOpen, onClose }: SearchModalProps) {
 
   return (
     <div className="fixed inset-0 z-[100] flex flex-col font-display">
-      {/* Redujimos la oscuridad de la capa de atrás para que el efecto de cristal resalte más */}
       <div className="absolute inset-0 bg-black/40 backdrop-blur-sm transition-opacity" onClick={onClose}></div>
 
-      {/* 🚀 EFECTO GLASSMORPHISM APLICADO AL MODAL (bg-white/85, bg-black/80, backdrop-blur-2xl) */}
       <div className="relative w-full bg-white/85 dark:bg-black/80 backdrop-blur-2xl shadow-2xl border-b border-white/40 dark:border-white/10 animate-in slide-in-from-top-4 duration-300 h-fit max-h-[85vh] flex flex-col">
         
         {/* BARRA DE BÚSQUEDA */}
         <div className="flex-shrink-0 max-w-7xl w-full mx-auto px-4 sm:px-6 lg:px-8 h-20 flex items-center justify-between gap-4 border-b border-gray-200/50 dark:border-white/10">
           
-          {/* El input también lo hacemos un poco traslúcido para mantener la temática */}
           <div className="flex-1 flex items-center gap-3 bg-white/50 dark:bg-white/5 px-4 py-3 rounded-md border border-gray-200/50 dark:border-white/10 focus-within:border-orange-500 transition-colors">
             {isSearching ? <FiRefreshCw className="w-5 h-5 text-orange-500 animate-spin" /> : <FiSearch className="w-5 h-5 text-orange-500" />}
             <input 
               type="text" 
               value={searchTerm}
               onChange={(e) => setSearchTerm(e.target.value)}
-              placeholder="Ej: Stick Watermelon, Craws, Plomos..." 
+              placeholder="Busca sticks, craws, senkos..." 
               autoFocus
               className="w-full bg-transparent border-none outline-none text-sm md:text-base font-bold text-gray-900 dark:text-white placeholder-gray-500 dark:placeholder-gray-400"
             />
@@ -134,7 +155,6 @@ export default function SearchModal({ isOpen, onClose }: SearchModalProps) {
             )}
           </div>
           
-          {/* Botón de cerrar de cristal */}
           <button onClick={onClose} className="p-2 text-gray-600 dark:text-gray-400 hover:text-orange-500 dark:hover:text-orange-500 transition-colors bg-white/50 dark:bg-white/5 border border-transparent dark:border-white/5 rounded-md">
             <FiX className="w-5 h-5" />
           </button>
@@ -154,7 +174,6 @@ export default function SearchModal({ isOpen, onClose }: SearchModalProps) {
                   <button 
                     key={index}
                     onClick={() => setSearchTerm(keyword)} 
-                    // Botones de keywords translúcidos
                     className="bg-white/60 dark:bg-white/5 lg:bg-transparent lg:dark:bg-transparent px-3 py-1.5 lg:p-0 rounded text-xs lg:text-sm font-bold text-gray-800 dark:text-zinc-300 hover:text-orange-500 dark:hover:text-orange-500 transition-colors uppercase tracking-widest text-left"
                   >
                     {keyword}
@@ -182,7 +201,6 @@ export default function SearchModal({ isOpen, onClose }: SearchModalProps) {
                 <div className="flex overflow-x-auto lg:overflow-visible snap-x snap-mandatory lg:grid lg:grid-cols-4 gap-4 lg:gap-6 pb-6 lg:pb-0 scrollbar-hide">
                   {resultados.map((prod) => (
                     <Link href={`/catalogo/${prod.slug}`} key={prod.id} onClick={onClose} className="group block min-w-[160px] sm:min-w-[180px] lg:min-w-0 snap-start">
-                      {/* Cajas de productos con efecto de cristal esmerilado */}
                       <div className="aspect-[4/3] lg:aspect-square bg-white/50 dark:bg-white/5 backdrop-blur-sm rounded-md border border-gray-200/50 dark:border-white/10 mb-3 overflow-hidden relative flex items-center justify-center p-4 shadow-sm hover:border-orange-500/50 transition-colors">
                         <Image src={prod.img} alt={prod.name} fill className="object-contain p-2 opacity-90 group-hover:opacity-100 group-hover:scale-110 transition-all duration-300" />
                       </div>
@@ -198,7 +216,6 @@ export default function SearchModal({ isOpen, onClose }: SearchModalProps) {
           </div>
         </div>
         
-        {/* Enlace al Catálogo */}
         {searchTerm && resultados.length > 0 && (
           <div className="border-t border-gray-200/50 dark:border-white/10 p-4 text-center flex-shrink-0">
             <Link href={`/catalogo?modelo=${searchTerm}`} onClick={onClose} className="text-xs font-black uppercase tracking-widest text-orange-500 hover:text-orange-600">

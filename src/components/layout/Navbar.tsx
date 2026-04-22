@@ -6,13 +6,18 @@ import Image from "next/image";
 import { useEffect, useState } from "react";
 import { FiSun, FiMoon, FiSearch, FiShoppingCart, FiMenu, FiUser, FiX } from "react-icons/fi";
 import SearchModal from "@/components/SearchModal"; 
+import { useCart } from "@/context/CartContext"; // 1. Importamos el hook del carrito
 
 export default function Navbar() {
   const { theme, setTheme } = useTheme();
+  const { cart, openCart } = useCart(); // 2. Extraemos el estado del carrito y la función para abrirlo
   const [mounted, setMounted] = useState(false);
   const [isScrolled, setIsScrolled] = useState(false);
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
   const [isSearchOpen, setIsSearchOpen] = useState(false); 
+
+  // 3. Calculamos el total de artículos reales en el carrito
+  const totalArticulos = cart.length;
 
   useEffect(() => setMounted(true), []);
 
@@ -33,7 +38,6 @@ export default function Navbar() {
   return (
     <>
       <nav
-        // 🚀 EFECTO GLASSMORPHISM PRINCIPAL
         className={`fixed top-0 w-full z-50 transition-all duration-500 ${
             isScrolled || isMobileMenuOpen
             ? "bg-white/60 dark:bg-black/50 backdrop-blur-lg border-b border-gray-200/50 dark:border-zinc-800/50 shadow-[0_4px_30px_rgba(0,0,0,0.1)] py-0"
@@ -54,8 +58,7 @@ export default function Navbar() {
               </button>
 
               <div className="hidden md:flex items-center gap-6 font-display font-bold text-sm tracking-widest uppercase">
-                <Link href="/catalogo" className="text-orange-500 border-b-2 border-orange-500 pb-1 transition-colors">Catálogo</Link>
-                {/*<Link href="/novedades" className="text-gray-700 dark:text-gray-300 hover:text-orange-500 dark:hover:text-orange-500 transition-colors drop-shadow-sm">Novedades</Link>*/}
+                <Link href="/catalogo" className="text-gray-700 dark:text-gray-300 hover:text-orange-500 dark:hover:text-orange-500 transition-colors drop-shadow-sm">Catálogo</Link>
                 <Link href="/team" className="text-gray-700 dark:text-gray-300 hover:text-orange-500 dark:hover:text-orange-500 transition-colors drop-shadow-sm">Team GECO</Link>
               </div>
             </div>
@@ -72,7 +75,6 @@ export default function Navbar() {
 
               <button
                 onClick={() => setIsSearchOpen(true)}
-                // Hacemos el botón de búsqueda un poco más cristalino también
                 className="group flex items-center gap-2 bg-black/5 dark:bg-white/5 hover:bg-black/10 dark:hover:bg-white/10 backdrop-blur-sm border border-transparent dark:border-white/10 rounded-full px-2 py-2 lg:px-4 lg:py-2 transition-all duration-300"
               >
                 <FiSearch className="w-5 h-5 text-gray-900 dark:text-white group-hover:text-orange-500 transition-colors" />
@@ -93,15 +95,25 @@ export default function Navbar() {
                 )}
               </div>
 
-              <button className="relative text-gray-900 dark:text-white hover:text-orange-500 transition-colors group drop-shadow-sm ml-1">
+              {/* 4. BOTÓN DEL CARRITO ACTUALIZADO */}
+              <button 
+                onClick={openCart} 
+                className="relative text-gray-900 dark:text-white hover:text-orange-500 transition-colors group drop-shadow-sm ml-1"
+              >
                 <FiShoppingCart className="w-5 h-5" />
-                <span className="absolute -top-2 -right-2 bg-orange-500 text-white text-[10px] w-4 h-4 flex items-center justify-center rounded-full font-bold shadow-md group-hover:scale-110 transition-transform">3</span>
+                
+                {/* Solo mostramos el contador si hay artículos y el componente ya cargó en el cliente */}
+                {mounted && totalArticulos > 0 && (
+                  <span className="absolute -top-2 -right-2 bg-orange-500 text-white text-[10px] w-4 h-4 flex items-center justify-center rounded-full font-bold shadow-md group-hover:scale-110 transition-transform">
+                    {totalArticulos}
+                  </span>
+                )}
               </button>
             </div>
           </div>
         </div>
 
-        {/* 🚀 MENÚ MÓVIL CON GLASSMORPHISM */}
+        {/* MENÚ MÓVIL */}
         <div
           className={`md:hidden absolute top-full left-0 w-full bg-white/80 dark:bg-black/80 backdrop-blur-xl border-b border-gray-200/50 dark:border-zinc-800/50 shadow-2xl transition-all duration-300 ease-in-out overflow-hidden ${
               isMobileMenuOpen ? "max-h-64 opacity-100 py-4" : "max-h-0 opacity-0 py-0"
@@ -111,16 +123,9 @@ export default function Navbar() {
             <Link
               href="/catalogo"
               onClick={() => setIsMobileMenuOpen(false)} 
-              className="text-orange-500 transition-colors"
-            >
-              Catálogo
-            </Link>
-            <Link
-              href="/novedades"
-              onClick={() => setIsMobileMenuOpen(false)}
               className="text-gray-900 dark:text-white hover:text-orange-500 transition-colors"
             >
-              Novedades
+              Catálogo
             </Link>
             <Link
               href="/team"

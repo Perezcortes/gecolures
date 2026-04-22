@@ -5,6 +5,7 @@ import { useRouter, usePathname, useSearchParams } from "next/navigation";
 import { FiShoppingBag, FiShare2 } from "react-icons/fi";
 import { calcularPrecioYPiezas } from "@/utils/calculadoraGeco";
 import ProductAccordion from "./ProductAccordion"; 
+import { useCart } from "@/context/CartContext";
 
 type ProductInfoProps = {
   producto: any;
@@ -60,18 +61,17 @@ export default function ProductInfo({ producto, colores, tallas, colorInicial, t
 
   const handleColorSelect = (colorName: string) => {
     setSelectedColor(colorName);
-    // Cambia la URL sin recargar la página: ?color=NombreDelColor
+    // Cambia la URL sin recargar la página
     router.replace(pathname + '?' + createQueryString('color', colorName), { scroll: false });
   };
 
   const handleSizeSelect = (size: string) => {
     setSelectedSize(size);
-    // Cambia la URL sin recargar la página: ?medida=Tamaño
+    // Cambia la URL sin recargar la página
     router.replace(pathname + '?' + createQueryString('medida', size), { scroll: false });
   };
 
   const handleShare = async () => {
-    // Al compartir, se enviará la URL exacta que está en el navegador
     const shareData = {
       title: `${producto.nombre} ${selectedColor ? `- Color ${selectedColor}` : ''} | Geco Lures`,
       text: `Mira este ${producto.nombre} en Geco Lures. Arsenal de Élite.`,
@@ -96,6 +96,8 @@ export default function ProductInfo({ producto, colores, tallas, colorInicial, t
     selectedColor || "",
     clasificacionActual
   );
+
+  const { addToCart } = useCart();
 
   return (
     <div className="flex flex-col">
@@ -135,37 +137,35 @@ export default function ProductInfo({ producto, colores, tallas, colorInicial, t
         </span>
       </div>
 
-      {colores.length === 1 && (
-        <div className="mb-6">
+      {/* Selector de Colores */}
+      {colores.length === 1 ? (
+        <div className="mb-6 text-left">
           <div className="flex items-center gap-2 mb-3">
             <h3 className="text-[10px] font-bold uppercase tracking-widest text-gray-900 dark:text-white">Color Único:</h3>
             <span className="text-[10px] font-bold text-orange-500">{colores[0].nombre}</span>
           </div>
-          <div title={colores[0].nombre} className="w-8 h-8 md:w-9 md:h-9 rounded-full border border-gray-200 dark:border-zinc-700 shadow-sm bg-zinc-800 cursor-default" style={{ backgroundImage: `url(${colores[0].swatch_url})`, backgroundSize: 'cover', backgroundPosition: 'center' }} />
+          <div className="w-8 h-8 md:w-9 md:h-9 rounded-full border border-gray-200 dark:border-zinc-700 shadow-sm bg-zinc-800" style={{ backgroundImage: `url(${colores[0].swatch_url})`, backgroundSize: 'cover', backgroundPosition: 'center' }} />
         </div>
-      )}
-
-      {colores.length > 1 && (
-        <div className="mb-6">
+      ) : (
+        <div className="mb-6 text-left">
           <div className="flex items-center gap-2 mb-3">
             <h3 className="text-[10px] font-bold uppercase tracking-widest text-gray-900 dark:text-white">Color:</h3>
             <span className="text-[10px] font-bold text-gray-500 dark:text-zinc-400">{selectedColor}</span>
           </div>
           <div className="flex flex-wrap gap-2 md:gap-2.5">
             {colores.map((color) => (
-              // CAMBIAMOS EL ONCLICK PARA USAR LA NUEVA FUNCIÓN
               <button key={color.id} onClick={() => handleColorSelect(color.nombre)} title={color.nombre} style={{ backgroundImage: `url(${color.swatch_url})`, backgroundSize: 'cover', backgroundPosition: 'center' }} className={`w-8 h-8 md:w-9 md:h-9 rounded-full border transition-all shadow-sm bg-zinc-800 ${selectedColor === color.nombre ? 'border-white dark:border-zinc-900 ring-2 ring-orange-500 scale-110' : 'border-gray-200 dark:border-zinc-700 hover:scale-105'}`} />
             ))}
           </div>
         </div>
       )}
 
+      {/* Selector de Tamaño */}
       {tallasOrdenadas.length > 0 && (
-        <div className="mb-8">
+        <div className="mb-8 text-left">
           <h3 className="text-[10px] font-bold uppercase tracking-widest text-gray-900 dark:text-white mb-3">Tamaño</h3>
           <div className="flex flex-wrap gap-2.5">
             {tallasOrdenadas.map((size) => (
-              // CAMBIAMOS EL ONCLICK PARA USAR LA NUEVA FUNCIÓN
               <button key={size} onClick={() => handleSizeSelect(size)} className={`min-w-[3.5rem] px-4 py-2 font-display font-black text-sm md:text-base transition-all rounded border ${selectedSize === size ? 'bg-orange-500 text-white border-orange-500 shadow-sm' : 'bg-transparent text-gray-900 dark:text-white border-gray-300 dark:border-zinc-700 hover:border-orange-500'}`}>
                 {size}
               </button>
@@ -174,17 +174,36 @@ export default function ProductInfo({ producto, colores, tallas, colorInicial, t
         </div>
       )}
 
+      {/* Botón Principal */}
       <div className="space-y-4 mb-8">
-        <button className="w-full bg-gray-900 dark:bg-white text-white dark:text-black py-4 font-display font-black text-lg uppercase tracking-widest transition-colors hover:bg-orange-500 dark:hover:bg-orange-500 hover:text-white rounded flex items-center justify-center gap-3 shadow-md">
+        <button 
+          onClick={() => {
+            const precioNumerico = parseFloat(calculo.precioFormateado.replace(/[^0-9.-]+/g,""));
+            
+            addToCart({
+              id: `${producto.slug}-${selectedColor}-${selectedSize}`,
+              productoId: producto.id,
+              slug: producto.slug, // 🚀 Ahora pasamos el slug real
+              nombre: producto.nombre,
+              color: selectedColor,
+              medida: selectedSize,
+              precioNumerico: isNaN(precioNumerico) ? 0 : precioNumerico,
+              precioFormateado: calculo.precioFormateado,
+              piezas: calculo.piezas.toString(),
+              imagen: colorSeleccionadoObj?.swatch_url || producto.producto_variantes?.[0]?.imagen_principal_url || "/logo_geco.png" 
+            });
+          }}
+          className="w-full bg-gray-900 dark:bg-white text-white dark:text-black py-4 font-display font-black text-lg uppercase tracking-widest transition-colors hover:bg-orange-500 dark:hover:bg-orange-500 hover:text-white rounded flex items-center justify-center gap-3 shadow-md"
+        >
           <FiShoppingBag className="w-5 h-5" />
           AGREGAR AL CARRITO
         </button>
       </div>
 
+      {/* Geco Tip */}
       {producto.squad_tip && (
-        <div className="bg-zinc-50 dark:bg-[#121212] p-5 border border-gray-200 dark:border-zinc-800 rounded mb-8">
+        <div className="bg-zinc-50 dark:bg-[#121212] p-5 border border-gray-200 dark:border-zinc-800 rounded mb-8 text-left">
           <h4 className="font-display font-black text-[10px] uppercase tracking-widest mb-2 flex items-center gap-1.5 text-orange-500">
-            <span className="material-symbols-outlined text-sm">Recomendación</span>
             GECO TIP
           </h4>
           <p className="text-xs text-gray-600 dark:text-zinc-400 leading-relaxed font-medium italic">
