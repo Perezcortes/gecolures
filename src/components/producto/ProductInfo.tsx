@@ -1,6 +1,7 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState, useEffect, useCallback } from "react";
+import { useRouter, usePathname, useSearchParams } from "next/navigation";
 import { FiShoppingBag, FiShare2 } from "react-icons/fi";
 import { calcularPrecioYPiezas } from "@/utils/calculadoraGeco";
 import ProductAccordion from "./ProductAccordion"; 
@@ -9,9 +10,16 @@ type ProductInfoProps = {
   producto: any;
   colores: any[];
   tallas: string[];
+  colorInicial?: string;
+  tallaInicial?: string;
 };
 
-export default function ProductInfo({ producto, colores, tallas }: ProductInfoProps) {
+export default function ProductInfo({ producto, colores, tallas, colorInicial, tallaInicial }: ProductInfoProps) {
+  // HOOKS DE NAVEGACIÓN PARA ACTUALIZAR LA URL
+  const router = useRouter();
+  const pathname = usePathname();
+  const searchParams = useSearchParams();
+
   const [selectedSize, setSelectedSize] = useState<string>("");
   const [selectedColor, setSelectedColor] = useState<string>("");
 
@@ -24,16 +32,50 @@ export default function ProductInfo({ producto, colores, tallas }: ProductInfoPr
     return numA - numB;
   });
 
+  // EFECTO DE INICIALIZACIÓN
   useEffect(() => {
-    if (tallasOrdenadas.length > 0) setSelectedSize(tallasOrdenadas[0]);
-    if (colores.length > 0) setSelectedColor(colores[0].nombre);
-  }, [tallas, colores]);
+    // Si viene en la URL, úsalo. Si no, usa el primero disponible.
+    if (tallaInicial && tallasOrdenadas.includes(tallaInicial)) {
+      setSelectedSize(tallaInicial);
+    } else if (tallasOrdenadas.length > 0) {
+      setSelectedSize(tallasOrdenadas[0]);
+    }
+
+    if (colorInicial && colores.some(c => c.nombre === colorInicial)) {
+      setSelectedColor(colorInicial);
+    } else if (colores.length > 0) {
+      setSelectedColor(colores[0].nombre);
+    }
+  }, [tallas, colores, tallaInicial, colorInicial]); // eslint-disable-line react-hooks/exhaustive-deps
+
+  // FUNCIÓN PARA ACTUALIZAR LA URL SILENCIOSAMENTE
+  const createQueryString = useCallback(
+    (name: string, value: string) => {
+      const params = new URLSearchParams(searchParams.toString());
+      params.set(name, value);
+      return params.toString();
+    },
+    [searchParams]
+  );
+
+  const handleColorSelect = (colorName: string) => {
+    setSelectedColor(colorName);
+    // Cambia la URL sin recargar la página: ?color=NombreDelColor
+    router.replace(pathname + '?' + createQueryString('color', colorName), { scroll: false });
+  };
+
+  const handleSizeSelect = (size: string) => {
+    setSelectedSize(size);
+    // Cambia la URL sin recargar la página: ?medida=Tamaño
+    router.replace(pathname + '?' + createQueryString('medida', size), { scroll: false });
+  };
 
   const handleShare = async () => {
+    // Al compartir, se enviará la URL exacta que está en el navegador
     const shareData = {
-      title: `${producto.nombre} | Geco Lures`,
+      title: `${producto.nombre} ${selectedColor ? `- Color ${selectedColor}` : ''} | Geco Lures`,
       text: `Mira este ${producto.nombre} en Geco Lures. Arsenal de Élite.`,
-      url: window.location.href,
+      url: window.location.href, 
     };
 
     if (navigator.share) {
@@ -111,7 +153,8 @@ export default function ProductInfo({ producto, colores, tallas }: ProductInfoPr
           </div>
           <div className="flex flex-wrap gap-2 md:gap-2.5">
             {colores.map((color) => (
-              <button key={color.id} onClick={() => setSelectedColor(color.nombre)} title={color.nombre} style={{ backgroundImage: `url(${color.swatch_url})`, backgroundSize: 'cover', backgroundPosition: 'center' }} className={`w-8 h-8 md:w-9 md:h-9 rounded-full border transition-all shadow-sm bg-zinc-800 ${selectedColor === color.nombre ? 'border-white dark:border-zinc-900 ring-2 ring-orange-500 scale-110' : 'border-gray-200 dark:border-zinc-700 hover:scale-105'}`} />
+              // CAMBIAMOS EL ONCLICK PARA USAR LA NUEVA FUNCIÓN
+              <button key={color.id} onClick={() => handleColorSelect(color.nombre)} title={color.nombre} style={{ backgroundImage: `url(${color.swatch_url})`, backgroundSize: 'cover', backgroundPosition: 'center' }} className={`w-8 h-8 md:w-9 md:h-9 rounded-full border transition-all shadow-sm bg-zinc-800 ${selectedColor === color.nombre ? 'border-white dark:border-zinc-900 ring-2 ring-orange-500 scale-110' : 'border-gray-200 dark:border-zinc-700 hover:scale-105'}`} />
             ))}
           </div>
         </div>
@@ -122,7 +165,8 @@ export default function ProductInfo({ producto, colores, tallas }: ProductInfoPr
           <h3 className="text-[10px] font-bold uppercase tracking-widest text-gray-900 dark:text-white mb-3">Tamaño</h3>
           <div className="flex flex-wrap gap-2.5">
             {tallasOrdenadas.map((size) => (
-              <button key={size} onClick={() => setSelectedSize(size)} className={`min-w-[3.5rem] px-4 py-2 font-display font-black text-sm md:text-base transition-all rounded border ${selectedSize === size ? 'bg-orange-500 text-white border-orange-500 shadow-sm' : 'bg-transparent text-gray-900 dark:text-white border-gray-300 dark:border-zinc-700 hover:border-orange-500'}`}>
+              // CAMBIAMOS EL ONCLICK PARA USAR LA NUEVA FUNCIÓN
+              <button key={size} onClick={() => handleSizeSelect(size)} className={`min-w-[3.5rem] px-4 py-2 font-display font-black text-sm md:text-base transition-all rounded border ${selectedSize === size ? 'bg-orange-500 text-white border-orange-500 shadow-sm' : 'bg-transparent text-gray-900 dark:text-white border-gray-300 dark:border-zinc-700 hover:border-orange-500'}`}>
                 {size}
               </button>
             ))}

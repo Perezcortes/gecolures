@@ -4,20 +4,32 @@ import { FiChevronRight } from "react-icons/fi";
 import { createClient } from "@/utils/supabase/server";
 import ProductGallery from "@/components/producto/ProductGallery";
 import ProductInfo from "@/components/producto/ProductInfo";
-import ProductAccordion from "@/components/producto/ProductAccordion";
-import { calcularPrecioYPiezas } from "@/utils/calculadoraGeco"; // <-- IMPORTAMOS LA MAGIA AQUÍ
+import { calcularPrecioYPiezas } from "@/utils/calculadoraGeco"; 
 
-export async function generateMetadata({
-  params
-}: {
-  params: Promise<{ slug: string }>
-}): Promise<Metadata> {
+type Props = {
+  params: Promise<{ slug: string }>;
+  searchParams: Promise<{ [key: string]: string | string[] | undefined }>;
+};
+
+// 1. METADATOS DINÁMICOS BASADOS EN URL
+export async function generateMetadata({ params, searchParams }: Props): Promise<Metadata> {
   const { slug } = await params;
+  const sParams = await searchParams;
+  const colorBuscado = typeof sParams.color === 'string' ? sParams.color : null;
+  
   const supabase = await createClient();
 
   const { data: producto } = await supabase
     .from("productos")
-    .select("nombre, squad_tip, descripcion, producto_variantes(imagen_principal_url)")
+    .select(`
+      nombre, 
+      squad_tip, 
+      descripcion, 
+      producto_variantes(
+        imagen_principal_url,
+        colores(nombre)
+      )
+    `)
     .eq("slug", slug)
     .single();
 
@@ -25,20 +37,34 @@ export async function generateMetadata({
     return { title: "Producto no encontrado | Geco Lures" };
   }
 
-  const imageUrl = producto.producto_variantes?.[0]?.imagen_principal_url || "https://tusitio.com/default-og.jpg";
+  // Lógica para buscar la imagen exacta del color seleccionado (si existe)
+  let imageUrl = "https://tusitio.com/default-og.jpg";
+  if (producto.producto_variantes && producto.producto_variantes.length > 0) {
+    // Intentamos encontrar la variante que coincida con el color de la URL
+    const varianteEspecifica = colorBuscado 
+      ? producto.producto_variantes.find((v: any) => v.colores?.nombre === colorBuscado)
+      : null;
+    
+    // Si la encontramos, usamos su imagen. Si no, usamos la primera que haya.
+    imageUrl = varianteEspecifica?.imagen_principal_url 
+      || producto.producto_variantes[0].imagen_principal_url 
+      || imageUrl;
+  }
+
+  const tituloColor = colorBuscado ? ` - Color ${colorBuscado}` : "";
 
   return {
-    title: `${producto.nombre} | Geco Lures`,
+    title: `${producto.nombre}${tituloColor} | Geco Lures`,
     description: producto.squad_tip || "Arsenal de Élite para pesca táctica.",
     openGraph: {
-      title: `${producto.nombre} | Geco Lures`,
+      title: `${producto.nombre}${tituloColor} | Geco Lures`,
       description: producto.squad_tip || "Arsenal de Élite para pesca táctica.",
       images: [
         {
           url: imageUrl,
           width: 800,
           height: 800,
-          alt: producto.nombre,
+          alt: `${producto.nombre} ${tituloColor}`,
         },
       ],
       type: "website",
@@ -46,13 +72,14 @@ export async function generateMetadata({
   };
 }
 
-export default async function ProductoDetalle({
-  params
-}: {
-  params: Promise<{ slug: string }>
-}) {
+export default async function ProductoDetalle({ params, searchParams }: Props) {
   const supabase = await createClient();
   const { slug } = await params;
+  const sParams = await searchParams;
+
+  // ATRAPAMOS LOS PARÁMETROS INICIALES DE LA URL
+  const colorInicial = typeof sParams.color === 'string' ? sParams.color : undefined;
+  const tallaInicial = typeof sParams.medida === 'string' ? sParams.medida : undefined;
 
   const { data: producto, error } = await supabase
     .from("productos")
@@ -73,14 +100,10 @@ export default async function ProductoDetalle({
       <main className="pt-32 pb-16 px-6 text-center">
         <h1 className="text-2xl font-black text-red-500 mb-4">Error cargando el producto</h1>
         <p className="text-zinc-500 mb-4">Intentamos buscar el slug: <span className="font-mono text-orange-500">{slug}</span></p>
-        <pre className="bg-zinc-900 text-left p-6 rounded text-xs text-green-400 overflow-auto max-w-2xl mx-auto">
-          {JSON.stringify(error, null, 2)}
-        </pre>
       </main>
     );
   }
 
-  // Extraemos datos únicos de las variantes
   const imagenesUnicas = new Set<string>();
   const coloresUnicos = new Map();
   const tallasUnicas = new Set<string>();
@@ -94,17 +117,8 @@ export default async function ProductoDetalle({
   const coloresArray = Array.from(coloresUnicos.values());
   const tallasArray = Array.from(tallasUnicas);
 
-  // 🚀 CÁLCULO DINÁMICO POR DEFECTO
-  // Agarramos la primera talla y el primer color disponible para calcular el estado inicial
-  const tallaMuestra = tallasArray.length > 0 ? tallasArray[0] : "5\"";
-  const colorMuestra = coloresArray.length > 0 ? (coloresArray[0] as any).nombre : "";
-  
-  const calculo = calcularPrecioYPiezas(producto.nombre, tallaMuestra, colorMuestra);
-
   return (
     <main className="pt-28 pb-16 px-4 md:px-6 max-w-[1400px] mx-auto bg-zinc-50 dark:bg-[#0e0e0e] min-h-screen">
-
-      {/* Breadcrumbs */}
       <div className="flex items-center gap-2 mb-8 font-bold text-[10px] md:text-xs tracking-widest uppercase text-gray-500 dark:text-zinc-500">
         <Link href="/" className="hover:text-orange-500 transition-colors">Home</Link>
         <FiChevronRight className="w-3 h-3" />
@@ -113,21 +127,21 @@ export default async function ProductoDetalle({
         <span className="text-gray-900 dark:text-white">{producto.nombre}</span>
       </div>
 
-      {/* Grid Principal */}
       <div className="grid grid-cols-1 lg:grid-cols-12 gap-12 lg:gap-16">
-
         <div className="lg:col-span-7">
           <ProductGallery imagenes={Array.from(imagenesUnicas)} />
         </div>
 
         <div className="lg:col-span-5 flex flex-col">
+          {/* PASAMOS LOS PARÁMETROS INICIALES AL COMPONENTE */}
           <ProductInfo
             producto={producto}
             colores={coloresArray}
             tallas={tallasArray}
+            colorInicial={colorInicial}
+            tallaInicial={tallaInicial}
           />
         </div>
-
       </div>
     </main>
   );
