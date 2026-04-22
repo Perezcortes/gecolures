@@ -4,14 +4,13 @@ import { FiChevronRight } from "react-icons/fi";
 import { createClient } from "@/utils/supabase/server";
 import ProductGallery from "@/components/producto/ProductGallery";
 import ProductInfo from "@/components/producto/ProductInfo";
-import { calcularPrecioYPiezas } from "@/utils/calculadoraGeco"; 
 
 type Props = {
   params: Promise<{ slug: string }>;
   searchParams: Promise<{ [key: string]: string | string[] | undefined }>;
 };
 
-// 1. METADATOS DINÁMICOS BASADOS EN URL
+// 1. METADATOS DINÁMICOS CON RESPALDO DE LOGO
 export async function generateMetadata({ params, searchParams }: Props): Promise<Metadata> {
   const { slug } = await params;
   const sParams = await searchParams;
@@ -24,7 +23,6 @@ export async function generateMetadata({ params, searchParams }: Props): Promise
     .select(`
       nombre, 
       squad_tip, 
-      descripcion, 
       producto_variantes(
         imagen_principal_url,
         colores(nombre)
@@ -37,18 +35,19 @@ export async function generateMetadata({ params, searchParams }: Props): Promise
     return { title: "Producto no encontrado | Geco Lures" };
   }
 
-  // Lógica para buscar la imagen exacta del color seleccionado (si existe)
-  let imageUrl = "https://tusitio.com/default-og.jpg";
+  const LOGO_BACKUP = "https://res.cloudinary.com/dkem2i0fv/image/upload/v1776844048/logo_geco_rn0pwl.png";
+  
+  let imageUrl = LOGO_BACKUP;
+
   if (producto.producto_variantes && producto.producto_variantes.length > 0) {
-    // Intentamos encontrar la variante que coincida con el color de la URL
     const varianteEspecifica = colorBuscado 
       ? producto.producto_variantes.find((v: any) => v.colores?.nombre === colorBuscado)
       : null;
     
-    // Si la encontramos, usamos su imagen. Si no, usamos la primera que haya.
+    // Prioridad: 1. Imagen del color | 2. Primera imagen del producto | 3. Logo Geco
     imageUrl = varianteEspecifica?.imagen_principal_url 
-      || producto.producto_variantes[0].imagen_principal_url 
-      || imageUrl;
+      || producto.producto_variantes[0]?.imagen_principal_url 
+      || LOGO_BACKUP;
   }
 
   const tituloColor = colorBuscado ? ` - Color ${colorBuscado}` : "";
@@ -67,7 +66,7 @@ export async function generateMetadata({ params, searchParams }: Props): Promise
           alt: `${producto.nombre} ${tituloColor}`,
         },
       ],
-      type: "website",
+      type: "article",
     },
   };
 }
@@ -77,7 +76,6 @@ export default async function ProductoDetalle({ params, searchParams }: Props) {
   const { slug } = await params;
   const sParams = await searchParams;
 
-  // ATRAPAMOS LOS PARÁMETROS INICIALES DE LA URL
   const colorInicial = typeof sParams.color === 'string' ? sParams.color : undefined;
   const tallaInicial = typeof sParams.medida === 'string' ? sParams.medida : undefined;
 
@@ -99,7 +97,7 @@ export default async function ProductoDetalle({ params, searchParams }: Props) {
     return (
       <main className="pt-32 pb-16 px-6 text-center">
         <h1 className="text-2xl font-black text-red-500 mb-4">Error cargando el producto</h1>
-        <p className="text-zinc-500 mb-4">Intentamos buscar el slug: <span className="font-mono text-orange-500">{slug}</span></p>
+        <p className="text-zinc-500">Intentamos buscar el slug: <span className="font-mono text-orange-500">{slug}</span></p>
       </main>
     );
   }
@@ -133,7 +131,6 @@ export default async function ProductoDetalle({ params, searchParams }: Props) {
         </div>
 
         <div className="lg:col-span-5 flex flex-col">
-          {/* PASAMOS LOS PARÁMETROS INICIALES AL COMPONENTE */}
           <ProductInfo
             producto={producto}
             colores={coloresArray}
