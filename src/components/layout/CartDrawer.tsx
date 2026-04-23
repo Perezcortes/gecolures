@@ -1,5 +1,7 @@
 "use client";
 
+// 🚀 Agregamos useEffect aquí
+import { useEffect } from "react";
 import { useCart } from "@/context/CartContext";
 import { FiX, FiTrash2, FiMinus, FiPlus, FiShoppingBag, FiExternalLink } from "react-icons/fi";
 import { FaWhatsapp } from "react-icons/fa";
@@ -10,24 +12,54 @@ export default function CartDrawer() {
   const { cart, isCartOpen, closeCart, updateQuantity, removeFromCart, cartTotal } = useCart();
   const router = useRouter();
 
+  // 🚀 1. LÓGICA PARA CONGELAR EL FONDO (Scroll Lock)
+  useEffect(() => {
+    if (isCartOpen) {
+      // Oculta la barra de scroll del body y evita que se mueva
+      document.body.style.overflow = "hidden";
+    } else {
+      // La restaura cuando se cierra el carrito
+      document.body.style.overflow = "unset";
+    }
+
+    // Limpieza por si el componente se desmonta
+    return () => {
+      document.body.style.overflow = "unset";
+    };
+  }, [isCartOpen]);
+
   const handleWhatsAppCheckout = () => {
     if (cart.length === 0) return;
-    const phoneNumber = "5218341218524";
+    const phoneNumber = "529531447499";
+    const baseUrl = "https://www.gecolures.com";
     
-    let message = `¡Hola! Me interesa armar este arsenal de Geco Lures: %0A%0A`;
+    // 🚀 1. Armamos el mensaje como texto normal (usando \n para saltos de línea)
+    let message = `¡Hola! Me interesa armar este arsenal de Geco Lures:\n\n`;
+    let totalBolsas = 0;
+
     cart.forEach((item) => {
-      message += `✅ *${item.cantidad}x ${item.nombre}*%0A`;
-      message += `   • Color: ${item.color}%0A`;
-      message += `   • Tamaño: ${item.medida}%0A`;
-      message += `   • ${item.precioFormateado} c/u (${item.piezas})%0A%0A`;
+      totalBolsas += item.cantidad;
+      
+      // Aseguramos que los espacios del color y medida viajen seguros en el link
+      const linkColor = encodeURIComponent(item.color);
+      const linkMedida = encodeURIComponent(item.medida);
+      const productLink = `${baseUrl}/catalogo/${item.slug}?color=${linkColor}&medida=${linkMedida}`;
+      
+      message += `✅ *${item.cantidad}x ${item.nombre}*\n`;
+      message += `   • Color: ${item.color}\n`;
+      message += `   • Tamaño: ${item.medida}\n`;
+      message += `   • ${item.precioFormateado} c/u (${item.piezas})\n`;
+      message += `   🔗 Ver: ${productLink}\n\n`;
     });
 
-    message += `--------------------------%0A`;
-    message += `*TOTAL ESTIMADO: $${cartTotal.toFixed(2)} MXN*%0A`;
-    message += `--------------------------%0A%0A`;
+    message += `--------------------------\n`;
+    message += `📦 *TOTAL ARTÍCULOS: ${totalBolsas}*\n`;
+    message += `💰 *TOTAL ESTIMADO: $${cartTotal.toFixed(2)} MXN*\n`;
+    message += `--------------------------\n\n`;
     message += `¿Tienen disponibilidad para coordinar el envío y el pago?`;
 
-    const whatsappUrl = `https://wa.me/${phoneNumber}?text=${message}`;
+    // 🚀 2. LA MAGIA ESTÁ AQUÍ: Codificamos TODO el bloque de texto de un solo golpe
+    const whatsappUrl = `https://wa.me/${phoneNumber}?text=${encodeURIComponent(message)}`;
     window.open(whatsappUrl, "_blank");
   };
 
@@ -37,10 +69,8 @@ export default function CartDrawer() {
     }
   };
 
-  // 🚀 LA CORRECCIÓN ESTÁ AQUÍ
   const goToProduct = (slug: string, color: string, medida: string) => {
     closeCart();
-    // Usamos el slug limpio que viene del item
     router.push(`/catalogo/${slug}?color=${encodeURIComponent(color)}&medida=${encodeURIComponent(medida)}`);
   };
 
@@ -79,7 +109,6 @@ export default function CartDrawer() {
             cart.map((item) => (
               <div key={item.id} className="group relative flex gap-4 p-3 bg-white/50 dark:bg-white/5 border border-gray-200/50 dark:border-white/10 rounded-lg hover:border-orange-500/50 transition-all duration-300">
                 
-                {/* 🚀 USAMOS item.slug EN LUGAR DE SPLITS */}
                 <button 
                   onClick={() => goToProduct(item.slug, item.color, item.medida)}
                   className="w-24 h-24 bg-zinc-100 dark:bg-black rounded-md border border-gray-200 dark:border-zinc-800 overflow-hidden relative flex-shrink-0 shadow-inner group/img"
