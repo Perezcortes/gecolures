@@ -30,7 +30,7 @@ export default function CartDrawer() {
 
   const handleWhatsAppCheckout = () => {
     if (cart.length === 0) return;
-    const phoneNumber = "529531447499";
+    const phoneNumber = "5218341218524";
     const baseUrl = "https://www.gecolures.com";
     
     // 🚀 1. Armamos el mensaje como texto normal (usando \n para saltos de línea)

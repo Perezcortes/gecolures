@@ -4,6 +4,7 @@ import { useState, useEffect, useCallback } from "react";
 import { useRouter, usePathname, useSearchParams } from "next/navigation";
 import { FiShoppingBag, FiShare2 } from "react-icons/fi";
 import { calcularPrecioYPiezas } from "@/utils/calculadoraGeco";
+import { useRecentlyViewed } from "@/hooks/useRecentlyViewed";
 import ProductAccordion from "./ProductAccordion"; 
 import { useCart } from "@/context/CartContext";
 
@@ -98,6 +99,29 @@ export default function ProductInfo({ producto, colores, tallas, colorInicial, t
   );
 
   const { addToCart } = useCart();
+  const { addProduct } = useRecentlyViewed();
+
+  // 🚀 Disparador para guardar el producto en el historial
+  useEffect(() => {
+    const varianteExacta = producto.producto_variantes?.find(
+      (v: any) => v.colores?.nombre === selectedColor && v.imagen_principal_url
+    );
+    
+    const imagenLureCompleto = varianteExacta?.imagen_principal_url 
+      || producto.producto_variantes?.find((v: any) => v.imagen_principal_url)?.imagen_principal_url 
+      || "https://res.cloudinary.com/dkem2i0fv/image/upload/v1776844048/logo_geco_rn0pwl.png";
+
+    addProduct({
+      id: producto.id,
+      slug: producto.slug,
+      name: producto.nombre,
+      price: calculo.precioFormateado,
+      image: imagenLureCompleto, 
+      category: producto.categorias?.nombre || "GECO"
+    });
+    
+  // 🚀 CORRECCIÓN DE DEPENDENCIAS AQUÍ (Solo usamos datos primitivos)
+  }, [producto.id, producto.slug, producto.nombre, selectedColor, calculo.precioFormateado, addProduct]);
 
   return (
     <div className="flex flex-col">
@@ -183,7 +207,7 @@ export default function ProductInfo({ producto, colores, tallas, colorInicial, t
             addToCart({
               id: `${producto.slug}-${selectedColor}-${selectedSize}`,
               productoId: producto.id,
-              slug: producto.slug, // 🚀 Ahora pasamos el slug real
+              slug: producto.slug, 
               nombre: producto.nombre,
               color: selectedColor,
               medida: selectedSize,

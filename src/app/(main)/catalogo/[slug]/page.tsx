@@ -4,6 +4,7 @@ import { FiChevronRight } from "react-icons/fi";
 import { createClient } from "@/utils/supabase/server";
 import ProductGallery from "@/components/producto/ProductGallery";
 import ProductInfo from "@/components/producto/ProductInfo";
+import RecentlyViewed from "@/components/producto/RecentlyViewed";
 
 type Props = {
   params: Promise<{ slug: string }>;
@@ -140,6 +141,7 @@ export default async function ProductoDetalle({ params, searchParams }: Props) {
           />
         </div>
       </div>
+      <RecentlyViewed currentProductId={producto.id} />
     </main>
   );
 }

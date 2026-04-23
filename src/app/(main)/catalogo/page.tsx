@@ -1,6 +1,7 @@
 import CatalogHero from "@/components/catalogo/CatalogHero";
 import ProductFilters from "@/components/catalogo/ProductFilters";
 import ProductGrid from "@/components/catalogo/ProductGrid";
+import RecentlyViewed from "@/components/producto/RecentlyViewed";
 
 export default async function Catalogo({
   searchParams,
@@ -50,6 +51,10 @@ export default async function Catalogo({
           modelo={modelo} 
         />
       </section>
+
+      <div className="w-full max-w-[1600px] mx-auto px-6 xl:px-12 pb-12">
+        <RecentlyViewed />
+      </div>
     </main>
   );
 }
