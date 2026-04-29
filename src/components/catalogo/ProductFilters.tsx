@@ -2,7 +2,7 @@
 
 import { useState, useEffect } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
-import { FiFilter, FiChevronDown, FiX } from "react-icons/fi"; // <-- Importamos FiX
+import { FiFilter, FiChevronDown, FiX } from "react-icons/fi"; 
 import { createClient } from "@/utils/supabase/client";
 
 const parseSize = (val: string) => {
@@ -30,6 +30,9 @@ export default function ProductFilters() {
   const [tallas, setTallas] = useState<any[]>([]);
   const [colores, setColores] = useState<any[]>([]);
   const [modelosEncontrados, setModelosEncontrados] = useState<string[]>([]);
+  
+  // 🚀 ESTADO PARA EL CAJÓN MÓVIL
+  const [isMobileOpen, setIsMobileOpen] = useState(false);
 
   const categoriaActual = searchParams.get('categoria') || "";
   const tallaActual = searchParams.get('talla') || "";
@@ -56,7 +59,13 @@ export default function ProductFilters() {
       }
     }
     cargarFiltros();
-  }, []);
+  }, [supabase]);
+
+  useEffect(() => {
+    if (isMobileOpen) document.body.style.overflow = "hidden";
+    else document.body.style.overflow = "unset";
+    return () => { document.body.style.overflow = "unset"; };
+  }, [isMobileOpen]);
 
   const tallasOrdenadas = [...tallas].sort((a, b) => {
     const numA = parseSize(a.valor);
@@ -69,43 +78,31 @@ export default function ProductFilters() {
 
   const actualizarFiltro = (tipo: string, valor: string) => {
     const params = new URLSearchParams(searchParams.toString());
-
     if (params.get(tipo) === valor) {
       params.delete(tipo);
-      if (tipo === 'categoria' && valor === 'SEÑUELOS') {
-        params.delete('modelo');
-      }
+      if (tipo === 'categoria' && valor === 'SEÑUELOS') params.delete('modelo');
     } else {
       params.set(tipo, valor);
     }
-
     params.set('page', '1');
     router.push(`/catalogo?${params.toString()}`, { scroll: false });
+    
+    // Cerramos el cajón móvil al seleccionar un filtro para mejorar la UX
+    setIsMobileOpen(false); 
   };
 
-  // Verificamos si la búsqueda actual es texto libre (ej. "black") o si es un modelo oficial (ej. "STICK")
   const esBusquedaLibre = modeloActual && !modelosEncontrados.includes(modeloActual.toUpperCase());
 
-  return (
-    <aside className="w-full lg:w-64 xl:w-72 flex-shrink-0 space-y-10">
-
-      <div className="lg:hidden flex items-center gap-2 mb-4 bg-zinc-100 dark:bg-zinc-900 p-4 font-bold uppercase cursor-pointer text-gray-900 dark:text-white">
-        <FiFilter className="text-orange-500" />
-        <span>Filtros del Arsenal</span>
-      </div>
-
-      {/* 🚀 NUEVO: INDICADOR DE BÚSQUEDA LIBRE */}
+  // 🚀 CONTENIDO DE LOS FILTROS (Separado para reusarlo en Móvil y Desktop)
+  const FilterContent = (
+    <div className="space-y-10">
       {esBusquedaLibre && (
-        <div className="bg-orange-500/10 border border-orange-500/20 p-4 rounded-md flex items-center justify-between mb-8 animate-in fade-in duration-300">
+        <div className="bg-orange-500/10 border border-orange-500/20 p-4 rounded-md flex items-center justify-between mb-8">
           <div>
             <p className="text-[9px] font-black uppercase tracking-widest text-orange-500 mb-0.5">Buscando coincidencia:</p>
             <p className="text-sm font-bold text-gray-900 dark:text-white uppercase truncate max-w-[150px]">"{modeloActual}"</p>
           </div>
-          <button 
-            onClick={() => actualizarFiltro('modelo', modeloActual)} 
-            className="p-2 bg-white dark:bg-[#121212] border border-gray-200 dark:border-zinc-800 rounded text-gray-500 hover:text-orange-500 transition-colors"
-            title="Limpiar búsqueda"
-          >
+          <button onClick={() => actualizarFiltro('modelo', modeloActual)} className="p-2 bg-white dark:bg-[#121212] border border-gray-200 dark:border-zinc-800 rounded text-gray-500 hover:text-orange-500 transition-colors">
             <FiX className="w-4 h-4" />
           </button>
         </div>
@@ -113,9 +110,7 @@ export default function ProductFilters() {
 
       {/* CATEGORÍAS */}
       <div>
-        <h3 className="text-orange-500 font-display font-black text-xl uppercase tracking-tighter mb-4 border-b border-gray-200 dark:border-zinc-800 pb-2">
-          Categoría
-        </h3>
+        <h3 className="text-orange-500 font-display font-black text-xl uppercase tracking-tighter mb-4 border-b border-gray-200 dark:border-zinc-800 pb-2">Categoría</h3>
         <div className="space-y-4">
           {categorias.map((cat) => {
             const nombreCategoria = cat.nombre.toUpperCase();
@@ -126,40 +121,19 @@ export default function ProductFilters() {
               <div key={cat.id} className="flex flex-col">
                 <div className="flex items-center justify-between group">
                   <label className="flex items-center gap-3 cursor-pointer">
-                    <input
-                      type="checkbox"
-                      checked={categoriaActual.toUpperCase() === nombreCategoria}
-                      onChange={() => actualizarFiltro('categoria', cat.nombre)}
-                      className="w-4 h-4 bg-zinc-100 dark:bg-[#121212] border-gray-300 dark:border-zinc-700 text-orange-500 focus:ring-orange-500 rounded-sm"
-                    />
-                    <span className={`uppercase font-bold tracking-widest text-[11px] transition-colors ${estaActivo && esSeñuelos ? 'text-orange-500' : 'text-gray-700 dark:text-zinc-300 group-hover:text-orange-500'}`}>
-                      {cat.nombre}
-                    </span>
+                    <input type="checkbox" checked={categoriaActual.toUpperCase() === nombreCategoria} onChange={() => actualizarFiltro('categoria', cat.nombre)} className="w-4 h-4 bg-zinc-100 dark:bg-[#121212] border-gray-300 dark:border-zinc-700 text-orange-500 focus:ring-orange-500 rounded-sm" />
+                    <span className={`uppercase font-bold tracking-widest text-[11px] transition-colors ${estaActivo && esSeñuelos ? 'text-orange-500' : 'text-gray-700 dark:text-zinc-300 group-hover:text-orange-500'}`}>{cat.nombre}</span>
                   </label>
-
-                  {esSeñuelos && (
-                    <div className={`transition-transform duration-300 ${estaActivo ? 'rotate-180 text-orange-500' : 'text-zinc-600'}`}>
-                      <FiChevronDown />
-                    </div>
-                  )}
+                  {esSeñuelos && (<div className={`transition-transform duration-300 ${estaActivo ? 'rotate-180 text-orange-500' : 'text-zinc-600'}`}><FiChevronDown /></div>)}
                 </div>
-
-                {/* LISTA DESPLEGABLE DE MODELOS (SOLO SI NO ES BÚSQUEDA LIBRE) */}
                 {esSeñuelos && estaActivo && (
-                  <div className="ml-6 mt-4 space-y-2 border-l border-zinc-200 dark:border-zinc-800 pl-4 animate-in slide-in-from-top-2 duration-300">
+                  <div className="ml-6 mt-4 space-y-2 border-l border-zinc-200 dark:border-zinc-800 pl-4">
                     <p className="text-[9px] font-black text-zinc-500 uppercase tracking-[0.2em] mb-3">Modelos</p>
                     {modelosEncontrados.length > 0 ? (
                       modelosEncontrados.map((tipo) => (
                         <label key={tipo} className="flex items-center gap-2 cursor-pointer group/item">
-                          <input
-                            type="checkbox"
-                            checked={modeloActual === tipo}
-                            onChange={() => actualizarFiltro('modelo', tipo)}
-                            className="w-3 h-3 bg-transparent border-zinc-700 text-orange-500 rounded-xs"
-                          />
-                          <span className={`uppercase font-bold tracking-widest text-[10px] transition-colors ${modeloActual === tipo ? 'text-orange-500' : 'text-zinc-500 group-hover/item:text-zinc-300'}`}>
-                            {tipo}S
-                          </span>
+                          <input type="checkbox" checked={modeloActual === tipo} onChange={() => actualizarFiltro('modelo', tipo)} className="w-3 h-3 bg-transparent border-zinc-700 text-orange-500 rounded-xs" />
+                          <span className={`uppercase font-bold tracking-widest text-[10px] transition-colors ${modeloActual === tipo ? 'text-orange-500' : 'text-zinc-500 group-hover/item:text-zinc-300'}`}>{tipo}S</span>
                         </label>
                       ))
                     ) : (
@@ -175,49 +149,59 @@ export default function ProductFilters() {
 
       {/* TAMAÑOS */}
       <div>
-        <h3 className="text-orange-500 font-display font-black text-xl uppercase tracking-tighter mb-4 border-b border-gray-200 dark:border-zinc-800 pb-2">
-          Tamaño
-        </h3>
+        <h3 className="text-orange-500 font-display font-black text-xl uppercase tracking-tighter mb-4 border-b border-gray-200 dark:border-zinc-800 pb-2">Tamaño</h3>
         <div className="grid grid-cols-2 gap-2 max-h-[240px] overflow-y-auto pr-2 scrollbar-personalizado">
           {tallasOrdenadas.map((talla) => (
-            <button
-              key={talla.id}
-              onClick={() => actualizarFiltro('talla', talla.valor)}
-              className={`border py-2.5 text-[10px] font-black uppercase tracking-widest transition-colors shadow-sm ${tallaActual === talla.valor
-                  ? 'bg-orange-500 border-orange-500 text-white'
-                  : 'bg-zinc-100 dark:bg-[#121212] border-gray-200 dark:border-zinc-800 text-gray-900 dark:text-white hover:border-orange-500 hover:text-orange-500'
-                }`}
-            >
-              {talla.valor}
-            </button>
+            <button key={talla.id} onClick={() => actualizarFiltro('talla', talla.valor)} className={`border py-2.5 text-[10px] font-black uppercase tracking-widest transition-colors shadow-sm ${tallaActual === talla.valor ? 'bg-orange-500 border-orange-500 text-white' : 'bg-zinc-100 dark:bg-[#121212] border-gray-200 dark:border-zinc-800 text-gray-900 dark:text-white hover:border-orange-500 hover:text-orange-500'}`}>{talla.valor}</button>
           ))}
         </div>
       </div>
 
       {/* COLORES */}
       <div>
-        <h3 className="text-orange-500 font-display font-black text-xl uppercase tracking-tighter mb-4 border-b border-gray-200 dark:border-zinc-800 pb-2">
-          Colores Disponibles
-        </h3>
+        <h3 className="text-orange-500 font-display font-black text-xl uppercase tracking-tighter mb-4 border-b border-gray-200 dark:border-zinc-800 pb-2">Colores</h3>
         <div className="flex flex-wrap gap-2 max-h-[300px] overflow-y-auto pr-2 scrollbar-personalizado">
           {colores.map((color) => (
-            <button
-              key={color.id}
-              title={color.nombre}
-              onClick={() => actualizarFiltro('color', color.nombre)}
-              className={`w-7 h-7 rounded border transition-all shadow-sm flex-shrink-0 ${colorActual === color.nombre
-                  ? 'border-white dark:border-zinc-900 ring-2 ring-orange-500 scale-110'
-                  : 'border-gray-300 dark:border-zinc-700 hover:border-orange-500 hover:scale-110 bg-zinc-800'
-                }`}
-              style={{
-                backgroundImage: `url(${color.swatch_url})`,
-                backgroundSize: 'cover',
-                backgroundPosition: 'center'
-              }}
-            />
+            <button key={color.id} title={color.nombre} onClick={() => actualizarFiltro('color', color.nombre)} className={`w-7 h-7 rounded border transition-all shadow-sm flex-shrink-0 ${colorActual === color.nombre ? 'border-white dark:border-zinc-900 ring-2 ring-orange-500 scale-110' : 'border-gray-300 dark:border-zinc-700 hover:border-orange-500 hover:scale-110 bg-zinc-800'}`} style={{ backgroundImage: `url(${color.swatch_url})`, backgroundSize: 'cover', backgroundPosition: 'center' }} />
           ))}
         </div>
       </div>
+    </div>
+  );
+
+  return (
+    <>
+      {/* 🚀 BOTÓN MÓVIL (Se oculta en PC) */}
+      <div className="lg:hidden w-full mb-4">
+        <button 
+          onClick={() => setIsMobileOpen(true)}
+          className="w-full bg-white dark:bg-[#121212] border border-gray-200 dark:border-zinc-800 p-4 font-display font-black uppercase tracking-widest text-sm flex items-center justify-center gap-3 shadow-sm hover:border-orange-500 transition-colors"
+        >
+          <FiFilter className="text-orange-500 w-5 h-5" />
+          FILTRAR ARSENAL
+        </button>
+      </div>
+
+      {/* 🚀 CAJÓN MÓVIL (Off-canvas) */}
+      <div className={`fixed inset-0 z-[150] flex transition-opacity duration-300 lg:hidden ${isMobileOpen ? "opacity-100 visible" : "opacity-0 invisible"}`}>
+        <div className="absolute inset-0 bg-black/60 backdrop-blur-sm" onClick={() => setIsMobileOpen(false)} />
+        <div className={`relative w-4/5 max-w-sm h-full bg-white dark:bg-[#0a0a0a] shadow-2xl overflow-y-auto transform transition-transform duration-300 ease-in-out ${isMobileOpen ? "translate-x-0" : "-translate-x-full"}`}>
+          <div className="sticky top-0 bg-white/90 dark:bg-[#0a0a0a]/90 backdrop-blur-md border-b border-gray-200 dark:border-zinc-800 p-4 flex items-center justify-between z-10">
+            <h2 className="font-display font-black text-xl uppercase tracking-tighter">Filtros</h2>
+            <button onClick={() => setIsMobileOpen(false)} className="p-2 bg-gray-100 dark:bg-zinc-900 rounded-full text-gray-600 dark:text-zinc-400 hover:text-orange-500 transition-colors">
+              <FiX className="w-5 h-5" />
+            </button>
+          </div>
+          <div className="p-6">
+            {FilterContent}
+          </div>
+        </div>
+      </div>
+
+      {/* 🚀 BARRA LATERAL DESKTOP */}
+      <aside className="hidden lg:block w-64 xl:w-72 flex-shrink-0 sticky top-28 h-fit max-h-[calc(100vh-8rem)] overflow-y-auto pr-4 scrollbar-personalizado">
+        {FilterContent}
+      </aside>
 
       <style dangerouslySetInnerHTML={{
         __html: `
@@ -227,6 +211,6 @@ export default function ProductFilters() {
         .dark .scrollbar-personalizado::-webkit-scrollbar-thumb { background-color: #27272a; }
         .scrollbar-personalizado::-webkit-scrollbar-thumb:hover { background-color: #f97316; }
       `}} />
-    </aside>
+    </>
   );
 }

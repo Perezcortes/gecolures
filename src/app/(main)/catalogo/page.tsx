@@ -11,7 +11,9 @@ export default async function Catalogo({
     categoria?: string; 
     talla?: string; 
     color?: string; 
-    modelo?: string 
+    modelo?: string;
+    sort?: string; // 🚀 AGREGADO: Ordenamiento
+    view?: string; // 🚀 AGREGADO: Cuadrícula/Lista
   }>;
 }) {
   const params = await searchParams;
@@ -21,6 +23,10 @@ export default async function Catalogo({
   const talla = params?.talla || "";
   const color = params?.color || "";
   let modelo = params?.modelo || ""; 
+  
+  // 🚀 EXTRAEMOS LOS NUEVOS PARÁMETROS
+  const sort = params?.sort || "newest"; 
+  const view = params?.view || "grid"; 
 
   // NORMALIZACIÓN: Si viene "Sticks" o "Senko", mandamos "Stick" al Grid
   const diccionario: { [key: string]: string } = {
@@ -43,13 +49,19 @@ export default async function Catalogo({
       <CatalogHero />
       <section className="w-full max-w-[1600px] mx-auto px-6 xl:px-12 py-12 flex flex-col lg:flex-row gap-8 lg:gap-16">
         <ProductFilters />
-        <ProductGrid 
-          currentPage={currentPage} 
-          categoria={categoria}
-          talla={talla}
-          color={color}
-          modelo={modelo} 
-        />
+        
+        {/* 🚀 Envolvemos el Grid en un div para que no colapse con los nuevos filtros laterales */}
+        <div className="flex-1 w-full min-w-0">
+          <ProductGrid 
+            currentPage={currentPage} 
+            categoria={categoria}
+            talla={talla}
+            color={color}
+            modelo={modelo} 
+            sort={sort} // 🚀 ENVIAMOS AL GRID
+            view={view} // 🚀 ENVIAMOS AL GRID
+          />
+        </div>
       </section>
 
       <div className="w-full max-w-[1600px] mx-auto px-6 xl:px-12 pb-12">

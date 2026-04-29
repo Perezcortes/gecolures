@@ -1,8 +1,9 @@
 import Image from "next/image";
 import Link from "next/link";
-import { FiShoppingBag, FiChevronLeft, FiChevronRight, FiImage } from "react-icons/fi";
+import { FiChevronLeft, FiChevronRight, FiImage, FiGrid, FiList } from "react-icons/fi";
 import { createClient } from "@/utils/supabase/server";
 import { calcularPrecioYPiezas } from "@/utils/calculadoraGeco";
+import SortSelect from "./SortSelect";
 
 type ProductGridProps = {
   currentPage?: number;
@@ -10,6 +11,8 @@ type ProductGridProps = {
   talla?: string;
   color?: string;
   modelo?: string;
+  sort?: string; 
+  view?: string; 
 };
 
 export default async function ProductGrid({ 
@@ -17,7 +20,9 @@ export default async function ProductGrid({
   categoria = "", 
   talla = "", 
   color = "",
-  modelo = ""
+  modelo = "",
+  sort = "newest",
+  view = "grid"
 }: ProductGridProps) {
   const supabase = await createClient();
 
@@ -25,33 +30,17 @@ export default async function ProductGrid({
   const from = (currentPage - 1) * ITEMS_PER_PAGE;
   const to = from + ITEMS_PER_PAGE - 1;
 
-  // 🚀 1. NORMALIZACIÓN TÁCTICA DEL MODELO (Igual que en el SearchModal)
   let terminoLimpio = modelo.toLowerCase().trim();
-  
   const diccionario: { [key: string]: string } = {
-    "senko": "stick",
-    "zenko": "stick",
-    "cenko": "stick",
-    "sticks": "stick",
-    "craws": "craw",
-    "lizards": "lizard",
-    "worms": "worm",
-    "lombriz": "worm",
-    "lombrices": "worm"
+    "senko": "stick", "zenko": "stick", "cenko": "stick", "sticks": "stick",
+    "craws": "craw", "lizards": "lizard", "worms": "worm", "lombriz": "worm", "lombrices": "worm"
   };
-
-  if (diccionario[terminoLimpio]) {
-    terminoLimpio = diccionario[terminoLimpio];
-  }
+  if (diccionario[terminoLimpio]) terminoLimpio = diccionario[terminoLimpio];
 
   let query = supabase
     .from("productos")
     .select(`
-      id, 
-      nombre, 
-      precio_base, 
-      slug, 
-      squad_tip,
+      id, nombre, precio_base, slug, squad_tip, created_at,
       categorias!inner(nombre),
       producto_variantes!inner(
         imagen_principal_url,
@@ -60,82 +49,75 @@ export default async function ProductGrid({
       )
     `, { count: "exact" });
 
-  if (categoria) {
-    query = query.eq('categorias.nombre', categoria);
-  }
-  if (talla) {
-    query = query.eq('producto_variantes.especificaciones.valor', talla);
-  }
-  if (color) {
-    query = query.eq('producto_variantes.colores.nombre', color);
-  }
-  
-  // 🚀 2. BÚSQUEDA FLEXIBLE
-  // Usamos terminoLimpio (la raíz de la palabra) para que encuentre coincidencias
-  if (terminoLimpio) {
-    query = query.ilike('nombre', `%${terminoLimpio}%`); 
+  if (categoria) query = query.eq('categorias.nombre', categoria);
+  if (talla) query = query.eq('producto_variantes.especificaciones.valor', talla);
+  if (color) query = query.eq('producto_variantes.colores.nombre', color);
+  if (terminoLimpio) query = query.ilike('nombre', `%${terminoLimpio}%`); 
+
+  // 🚀 LÓGICA DE ORDENAMIENTO (SORTING)
+  switch(sort) {
+    case "price_asc": query = query.order('precio_base', { ascending: true }); break;
+    case "price_desc": query = query.order('precio_base', { ascending: false }); break;
+    case "alpha_asc": query = query.order('nombre', { ascending: true }); break;
+    case "alpha_desc": query = query.order('nombre', { ascending: false }); break;
+    default: query = query.order('created_at', { ascending: false }); break; // newest
   }
 
   const { data: rawProducts, count } = await query
     .eq('is_active', true)
-    .order('created_at', { ascending: false })
     .range(from, to);
 
   const totalPages = Math.ceil((count || 0) / ITEMS_PER_PAGE);
 
-  // ... (Toda tu lógica de mapeo de productos se mantiene igual)
   const productosFormateados = (rawProducts || []).map((prod: any) => {
     const coloresUnicos = new Map();
     let imagenPrincipal: string | null = null;
     let tallaMuestra = "5\""; 
 
     prod.producto_variantes?.forEach((variante: any) => {
-      if (!imagenPrincipal && variante.imagen_principal_url) {
-        imagenPrincipal = variante.imagen_principal_url;
-      }
-      
-      if (variante.especificaciones && variante.especificaciones.valor) {
-        tallaMuestra = variante.especificaciones.valor;
-      }
-
-      if (variante.colores && !coloresUnicos.has(variante.colores.id)) {
-        coloresUnicos.set(variante.colores.id, variante.colores);
-      }
+      if (!imagenPrincipal && variante.imagen_principal_url) imagenPrincipal = variante.imagen_principal_url;
+      if (variante.especificaciones && variante.especificaciones.valor) tallaMuestra = variante.especificaciones.valor;
+      if (variante.colores && !coloresUnicos.has(variante.colores.id)) coloresUnicos.set(variante.colores.id, variante.colores);
     });
 
     const coloresArray = Array.from(coloresUnicos.values());
     const colorObj = coloresArray.length > 0 ? (coloresArray[0] as any) : null;
-    
     const colorMuestra = colorObj ? colorObj.nombre : "";
     const clasificacionMuestra = colorObj && colorObj.clasificacion ? colorObj.clasificacion : "Sólido";
-
     const calculo = calcularPrecioYPiezas(prod.nombre, tallaMuestra, colorMuestra, clasificacionMuestra);
 
     return {
-      id: prod.id,
-      slug: prod.slug,
-      name: prod.nombre,
-      price: calculo.precioFormateado, 
-      piezas: calculo.textoPaquete,    
-      description: prod.squad_tip || "Arsenal de Élite",
-      image: imagenPrincipal,
-      tag: prod.categorias?.nombre || "",
-      tagStyle: "bg-zinc-800 text-orange-500",
-      colores: coloresArray
+      id: prod.id, slug: prod.slug, name: prod.nombre, price: calculo.precioFormateado, 
+      piezas: calculo.textoPaquete, description: prod.squad_tip || "Arsenal de Élite",
+      image: imagenPrincipal, category: prod.categorias?.nombre || "", colores: coloresArray
     };
   });
 
-  const getPaginationUrl = (page: number) => {
+  const getUrlBuilder = () => {
     const params = new URLSearchParams();
-    params.set('page', page.toString());
     if (categoria) params.set('categoria', categoria);
     if (talla) params.set('talla', talla);
     if (color) params.set('color', color);
-    if (modelo) params.set('modelo', modelo); // Mantenemos el término original en la URL
+    if (modelo) params.set('modelo', modelo);
+    return params;
+  };
+
+  const getPaginationUrl = (page: number) => {
+    const params = getUrlBuilder();
+    params.set('page', page.toString());
+    params.set('sort', sort);
+    params.set('view', view);
     return `/catalogo?${params.toString()}`;
   };
 
-  // ... (Resto de tu lógica de paginación y renderizado se mantiene igual)
+  const getControlUrl = (key: string, value: string) => {
+    const params = getUrlBuilder();
+    params.set('page', '1');
+    params.set('sort', key === 'sort' ? value : sort);
+    params.set('view', key === 'view' ? value : view);
+    return `/catalogo?${params.toString()}`;
+  };
+
   const generarPaginacion = (current: number, total: number) => {
     if (total <= 5) return Array.from({ length: total }, (_, i) => i + 1);
     if (current <= 3) return [1, 2, 3, 4, '...', total];
@@ -144,53 +126,98 @@ export default async function ProductGrid({
   };
 
   const paginasMostradas = generarPaginacion(currentPage, totalPages);
+  const isList = view === 'list';
 
   return (
-    <div className="flex-grow">
-      {/* ... (Todo tu JSX de renderizado se mantiene idéntico) */}
-      <div className="flex flex-col md:flex-row justify-between items-start md:items-center mb-8 pb-4 border-b border-gray-200 dark:border-zinc-800 gap-4">
+    <div className="flex-grow w-full">
+      
+      {/* 🚀 BARRA SUPERIOR (SORT & VIEW) */}
+      <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center mb-6 pb-4 border-b border-gray-200 dark:border-zinc-800 gap-4">
         <span className="font-bold text-xs uppercase tracking-widest text-gray-500 dark:text-zinc-400">
-          {count === 0 ? "Sin resultados" : `Mostrando ${from + 1} - ${Math.min(to + 1, count || 0)} de ${count} señuelos`}
+          {count === 0 ? "Sin resultados" : `${count} SEÑUELOS`}
         </span>
+
+        <div className="flex items-center gap-4 sm:gap-6 w-full sm:w-auto justify-between sm:justify-end">
+          
+          {/* SORT BY DROPDOWN */}
+          <div className="flex items-center gap-2">
+            <label className="text-[10px] font-black uppercase tracking-widest text-zinc-500 hidden sm:block">
+              Ordenar:
+            </label>
+            <SortSelect currentSort={sort} />
+          </div>
+
+          {/* VIEW TOGGLES (Grid vs List) */}
+          <div className="flex items-center bg-gray-100 dark:bg-zinc-900 rounded p-1">
+            <Link 
+              href={getControlUrl('view', 'grid')} scroll={false}
+              className={`p-2 rounded transition-colors ${!isList ? 'bg-white dark:bg-[#222] text-orange-500 shadow-sm' : 'text-gray-400 hover:text-white'}`}
+            >
+              <FiGrid className="w-4 h-4" />
+            </Link>
+            <Link 
+              href={getControlUrl('view', 'list')} scroll={false}
+              className={`p-2 rounded transition-colors ${isList ? 'bg-white dark:bg-[#222] text-orange-500 shadow-sm' : 'text-gray-400 hover:text-white'}`}
+            >
+              <FiList className="w-4 h-4" />
+            </Link>
+          </div>
+        </div>
       </div>
 
       {productosFormateados.length === 0 && (
         <div className="p-12 text-center border border-dashed border-zinc-800 rounded-lg">
-          <p className="text-zinc-500 font-bold uppercase tracking-widest text-sm">
-            No hay señuelos con estos filtros en el arsenal.
-          </p>
-          <Link href="/catalogo" className="mt-4 inline-block text-orange-500 font-black text-xs uppercase hover:underline">
-            Limpiar Filtros
-          </Link>
+          <p className="text-zinc-500 font-bold uppercase tracking-widest text-sm mb-4">No hay señuelos con estos filtros.</p>
+          <Link href="/catalogo" className="inline-block px-6 py-3 bg-orange-500 text-white font-black text-xs uppercase hover:bg-orange-600 transition-colors rounded-sm">Limpiar Filtros</Link>
         </div>
       )}
 
-      <div className="grid grid-cols-2 md:grid-cols-3 xl:grid-cols-4 gap-3 md:gap-6 lg:gap-8">
+      {/* 🚀 RENDERIZADO CONDICIONAL: GRID vs LIST */}
+      <div className={isList ? "flex flex-col gap-4" : "grid grid-cols-2 md:grid-cols-3 xl:grid-cols-4 gap-3 md:gap-6 lg:gap-8"}>
         {productosFormateados.map((product) => (
           <Link 
             href={`/catalogo/${product.slug}`} 
             key={product.id} 
-            className="group relative bg-zinc-50 dark:bg-[#121212] border border-gray-200 dark:border-zinc-800 flex flex-col hover:border-orange-500 transition-colors"
+            className={`group bg-zinc-50 dark:bg-[#121212] border border-gray-200 dark:border-zinc-800 hover:border-orange-500 transition-colors overflow-hidden ${isList ? 'flex flex-row items-center h-32 sm:h-40' : 'relative flex flex-col'}`}
           >
-            <div className="relative aspect-square overflow-hidden bg-zinc-200/50 dark:bg-[#0a0a0a] p-6 flex items-center justify-center">
+            {/* Imagen */}
+            <div className={`relative bg-zinc-200/50 dark:bg-[#0a0a0a] flex items-center justify-center p-4 ${isList ? 'w-32 sm:w-48 h-full flex-shrink-0 border-r border-zinc-800/50' : 'aspect-square w-full'}`}>
               {product.image ? (
-                <Image src={product.image} alt={product.name} fill className="p-6 object-contain drop-shadow-2xl group-hover:scale-110 transition-transform duration-500 z-10" />
+                <Image src={product.image} alt={product.name} fill className="p-4 object-contain drop-shadow-2xl group-hover:scale-110 transition-transform duration-500 z-10" />
               ) : (
-                <FiImage className="w-12 h-12 text-zinc-800 z-10" />
+                <FiImage className="w-10 h-10 text-zinc-800 z-10" />
               )}
             </div>
             
-            <div className="p-4 md:p-6 flex flex-col flex-grow">
-              <h3 className="font-display font-black text-sm md:text-xl uppercase tracking-tighter text-gray-900 dark:text-white group-hover:text-orange-500 transition-colors mb-1">
-                {product.name}
-              </h3>
-              <div className="flex flex-wrap items-center gap-2 mb-4">
+            {/* Contenido */}
+            <div className={`flex flex-col flex-grow ${isList ? 'p-4 sm:p-6 justify-center' : 'p-4 md:p-6'}`}>
+              <div className={isList ? "flex justify-between items-start w-full" : ""}>
+                <div>
+                  <p className="text-[9px] font-bold text-gray-500 uppercase tracking-widest truncate mb-1">
+                    {product.category}
+                  </p>
+                  <h3 className={`font-display font-black uppercase text-gray-900 dark:text-white group-hover:text-orange-500 transition-colors leading-tight ${isList ? 'text-sm sm:text-xl max-w-lg' : 'text-sm md:text-xl mb-3'}`}>
+                    {product.name}
+                  </h3>
+                </div>
+                {isList && (
+                  <div className="hidden sm:block text-right">
+                    <p className="text-orange-500 font-display font-black text-2xl">{product.price}</p>
+                    <p className="text-[9px] font-black uppercase text-zinc-500 bg-zinc-800 px-2 py-1 mt-1 rounded-sm inline-block">{product.piezas}</p>
+                  </div>
+                )}
+              </div>
+
+              {/* Precio Móvil en Lista / Desktop en Grid */}
+              <div className={`flex flex-wrap items-center gap-2 ${isList ? 'sm:hidden mt-2' : 'mb-4'}`}>
                 <p className="text-orange-500 font-display font-bold text-sm md:text-lg">{product.price}</p>
                 <span className="text-[9px] font-black uppercase text-zinc-500 bg-zinc-200 dark:bg-zinc-800 px-2 py-0.5 rounded-sm">
                   {product.piezas}
                 </span>
               </div>
-              <div className="mt-auto pt-4 border-t border-zinc-200 dark:border-zinc-800/50 flex items-center justify-between">
+
+              {/* Colores Footer */}
+              <div className={`flex items-center justify-between ${isList ? 'mt-3 sm:mt-4' : 'mt-auto pt-4 border-t border-zinc-200 dark:border-zinc-800/50'}`}>
                 <p className="text-[9px] font-black text-zinc-500 uppercase tracking-widest">
                   {product.colores.length === 1 ? "COLOR ÚNICO" : `${product.colores.length} COLORES`}
                 </p>
@@ -205,70 +232,29 @@ export default async function ProductGrid({
         ))}
       </div>
 
-      {/* Paginación (Sigue igual) */}
-      {totalPages > 1 && (
-        <div className="mt-16 flex justify-center items-center gap-2">
-          {/* ... (Contenido de paginación que ya tenías) */}
-        </div>
-      )}
-
       {/* 🚀 UI DE PAGINACIÓN REDISEÑADA */}
       {totalPages > 1 && (
         <div className="mt-16 flex justify-center items-center gap-2">
-          
-          {/* Botón Anterior */}
           {currentPage > 1 ? (
-            <Link 
-              href={getPaginationUrl(currentPage - 1)} 
-              className="w-10 h-10 flex items-center justify-center bg-white dark:bg-[#121212] border border-gray-200 dark:border-zinc-800 text-gray-900 dark:text-white hover:text-orange-500 hover:border-orange-500 transition-colors rounded-sm"
-            >
-              <FiChevronLeft className="w-5 h-5" />
-            </Link>
+            <Link href={getPaginationUrl(currentPage - 1)} className="w-10 h-10 flex items-center justify-center bg-white dark:bg-[#121212] border border-gray-200 dark:border-zinc-800 text-gray-900 dark:text-white hover:text-orange-500 transition-colors rounded-sm shadow-sm"><FiChevronLeft className="w-5 h-5" /></Link>
           ) : (
-            <span className="w-10 h-10 flex items-center justify-center bg-gray-50 dark:bg-[#0a0a0a] border border-gray-200 dark:border-zinc-800 text-gray-400 dark:text-zinc-600 rounded-sm opacity-50 cursor-not-allowed">
-              <FiChevronLeft className="w-5 h-5" />
-            </span>
+            <span className="w-10 h-10 flex items-center justify-center bg-gray-50 dark:bg-[#0a0a0a] border border-gray-200 dark:border-zinc-800 text-gray-400 rounded-sm opacity-50"><FiChevronLeft className="w-5 h-5" /></span>
           )}
 
-          {/* Números y Puntos Suspensivos */}
           {paginasMostradas.map((page, index) => {
-            if (page === '...') {
-              return (
-                <span key={`ellipsis-${index}`} className="w-10 h-10 flex items-center justify-center text-gray-500 dark:text-zinc-500 font-black">
-                  ...
-                </span>
-              );
-            }
-
+            if (page === '...') return <span key={`ellipsis-${index}`} className="w-10 h-10 flex items-center justify-center text-gray-500 font-black">...</span>;
             return (
-              <Link 
-                key={page} 
-                href={getPaginationUrl(page as number)}
-                className={`w-10 h-10 flex items-center justify-center font-black text-sm border transition-colors rounded-sm ${
-                  currentPage === page 
-                    ? 'bg-orange-500 text-white border-orange-500 shadow-sm' 
-                    : 'bg-white dark:bg-[#121212] border-gray-200 dark:border-zinc-800 text-gray-900 dark:text-white hover:border-orange-500 hover:text-orange-500'
-                }`}
-              >
+              <Link key={page} href={getPaginationUrl(page as number)} className={`w-10 h-10 flex items-center justify-center font-black text-sm border transition-colors rounded-sm ${currentPage === page ? 'bg-orange-500 text-white border-orange-500 shadow-sm' : 'bg-white dark:bg-[#121212] border-gray-200 dark:border-zinc-800 hover:text-orange-500'}`}>
                 {page}
               </Link>
             );
           })}
 
-          {/* Botón Siguiente */}
           {currentPage < totalPages ? (
-            <Link 
-              href={getPaginationUrl(currentPage + 1)} 
-              className="w-10 h-10 flex items-center justify-center bg-white dark:bg-[#121212] border border-gray-200 dark:border-zinc-800 text-gray-900 dark:text-white hover:text-orange-500 hover:border-orange-500 transition-colors rounded-sm"
-            >
-              <FiChevronRight className="w-5 h-5" />
-            </Link>
+            <Link href={getPaginationUrl(currentPage + 1)} className="w-10 h-10 flex items-center justify-center bg-white dark:bg-[#121212] border border-gray-200 dark:border-zinc-800 text-gray-900 dark:text-white hover:text-orange-500 transition-colors rounded-sm shadow-sm"><FiChevronRight className="w-5 h-5" /></Link>
           ) : (
-            <span className="w-10 h-10 flex items-center justify-center bg-gray-50 dark:bg-[#0a0a0a] border border-gray-200 dark:border-zinc-800 text-gray-400 dark:text-zinc-600 rounded-sm opacity-50 cursor-not-allowed">
-              <FiChevronRight className="w-5 h-5" />
-            </span>
+            <span className="w-10 h-10 flex items-center justify-center bg-gray-50 dark:bg-[#0a0a0a] border border-gray-200 dark:border-zinc-800 text-gray-400 rounded-sm opacity-50"><FiChevronRight className="w-5 h-5" /></span>
           )}
-
         </div>
       )}
     </div>
