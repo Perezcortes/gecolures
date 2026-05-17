@@ -11,9 +11,10 @@ export default async function Catalogo({
     categoria?: string; 
     talla?: string; 
     color?: string; 
+    color_id?: string; // 🚀 AGREGADO: ID único de la textura
     modelo?: string;
-    sort?: string; // 🚀 AGREGADO: Ordenamiento
-    view?: string; // 🚀 AGREGADO: Cuadrícula/Lista
+    sort?: string; 
+    view?: string; 
   }>;
 }) {
   const params = await searchParams;
@@ -22,9 +23,9 @@ export default async function Catalogo({
   const categoria = params?.categoria || "";
   const talla = params?.talla || "";
   const color = params?.color || "";
+  const color_id = params?.color_id || ""; // 🚀 EXTRAEMOS EL ID DE LA URL
   let modelo = params?.modelo || ""; 
   
-  // 🚀 EXTRAEMOS LOS NUEVOS PARÁMETROS
   const sort = params?.sort || "newest"; 
   const view = params?.view || "grid"; 
 
@@ -50,16 +51,17 @@ export default async function Catalogo({
       <section className="w-full max-w-[1600px] mx-auto px-6 xl:px-12 py-12 flex flex-col lg:flex-row gap-8 lg:gap-16">
         <ProductFilters />
         
-        {/* 🚀 Envolvemos el Grid en un div para que no colapse con los nuevos filtros laterales */}
+        {/* Envolvemos el Grid en un div para que no colapse con los nuevos filtros laterales */}
         <div className="flex-1 w-full min-w-0">
           <ProductGrid 
             currentPage={currentPage} 
             categoria={categoria}
             talla={talla}
             color={color}
+            color_id={color_id} // 🚀 SE LO PASAMOS AL GRID PARA QUE HAGA LA BÚSQUEDA EXACTA
             modelo={modelo} 
-            sort={sort} // 🚀 ENVIAMOS AL GRID
-            view={view} // 🚀 ENVIAMOS AL GRID
+            sort={sort} 
+            view={view} 
           />
         </div>
       </section>

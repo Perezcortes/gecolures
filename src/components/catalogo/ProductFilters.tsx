@@ -31,12 +31,14 @@ export default function ProductFilters() {
   const [colores, setColores] = useState<any[]>([]);
   const [modelosEncontrados, setModelosEncontrados] = useState<string[]>([]);
   
-  // 🚀 ESTADO PARA EL CAJÓN MÓVIL
   const [isMobileOpen, setIsMobileOpen] = useState(false);
 
   const categoriaActual = searchParams.get('categoria') || "";
   const tallaActual = searchParams.get('talla') || "";
-  const colorActual = searchParams.get('color') || "";
+  
+  // 🚀 CAMBIO CLAVE: El filtro ahora leerá el ID único o el nombre real de la base de datos
+  const colorActualId = searchParams.get('color_id') || "";
+  const categoriaActualParam = searchParams.get('categoria') || "";
   const modeloActual = searchParams.get('modelo') || "";
 
   useEffect(() => {
@@ -50,10 +52,35 @@ export default function ProductFilters() {
 
       if (cat) setCategorias(cat);
       if (tal) setTallas(tal);
-      if (col) setColores(col);
+
+      if (col) {
+        // 🚀 NO AGRUPAMOS POR NOMBRE, renderizamos cada color/textura guardada de la BD de forma independiente.
+        // Cada registro de la BD representa una textura real y única de tu arsenal.
+        const coloresFormateados = col.map((c: any) => {
+          // Extraemos el modelo del paréntesis para el Tooltip de ayuda (Ej: "STICK" o "WACKY")
+          const extractModelo = c.nombre.includes('(') ? c.nombre.split('(')[1].replace(')', '').trim() : "";
+          const nombreLimpio = c.nombre.split(' (')[0].trim().toUpperCase();
+
+          return {
+            id: c.id, // ID único de la base de datos (Ej: id del wacky o id del stick)
+            nombre: nombreLimpio, // Nombre limpio para mostrar en el tooltip
+            nombreRealBD: c.nombre, // "WATERMELON RED (STICK)" -> Útil para auditoría interna
+            modeloAsociado: extractModelo, // "STICK" o "WACKY"
+            swatch_url: c.swatch_url
+          };
+        });
+
+        setColores(coloresFormateados);
+      }
 
       if (prod) {
-        const tipos = prod.map(p => p.nombre.split(' ')[0].toUpperCase());
+        const models = ["WACKY WORM", "RIBBON TAIL", "SUPER HOG", "DROP SHOT"];
+        const tipos = prod.map(p => {
+          const nombreUpper = p.nombre.toUpperCase();
+          const modeloCompuesto = models.find(m => nombreUpper.startsWith(m));
+          return modeloCompuesto ? modeloCompuesto : nombreUpper.split(' ')[0];
+        });
+
         const tiposUnicos = Array.from(new Set(tipos)).sort();
         setModelosEncontrados(tiposUnicos);
       }
@@ -76,24 +103,36 @@ export default function ProductFilters() {
     return numA - numB;
   });
 
-  const actualizarFiltro = (tipo: string, valor: string) => {
+  const actualizarFiltro = (tipo: string, valor: string, idOpcional?: string) => {
     const params = new URLSearchParams(searchParams.toString());
-    if (params.get(tipo) === valor) {
-      params.delete(tipo);
-      if (tipo === 'categoria' && valor === 'SEÑUELOS') params.delete('modelo');
+    
+    if (tipo === 'color') {
+      // 🚀 Si el usuario vuelve a clickear el mismo círculo de color activo, lo limpiamos
+      if (params.get('color_id') === idOpcional) {
+        params.delete('color');
+        params.delete('color_id');
+      } else {
+        // Guardamos el nombre limpio para que la URL se vea bonita (?color=WATERMELON RED)
+        params.set('color', valor);
+        // Guardamos el ID real de la base de datos para que la consulta no falle (?color_id=9b3c8a...)
+        if (idOpcional) params.set('color_id', idOpcional);
+      }
     } else {
-      params.set(tipo, valor);
+      if (params.get(tipo) === valor) {
+        params.delete(tipo);
+        if (tipo === 'categoria' && valor === 'SEÑUELOS') params.delete('modelo');
+      } else {
+        params.set(tipo, valor);
+      }
     }
+    
     params.set('page', '1');
     router.push(`/catalogo?${params.toString()}`, { scroll: false });
-    
-    // Cerramos el cajón móvil al seleccionar un filtro para mejorar la UX
     setIsMobileOpen(false); 
   };
 
   const esBusquedaLibre = modeloActual && !modelosEncontrados.includes(modeloActual.toUpperCase());
 
-  // 🚀 CONTENIDO DE LOS FILTROS (Separado para reusarlo en Móvil y Desktop)
   const FilterContent = (
     <div className="space-y-10">
       {esBusquedaLibre && (
@@ -130,12 +169,17 @@ export default function ProductFilters() {
                   <div className="ml-6 mt-4 space-y-2 border-l border-zinc-200 dark:border-zinc-800 pl-4">
                     <p className="text-[9px] font-black text-zinc-500 uppercase tracking-[0.2em] mb-3">Modelos</p>
                     {modelosEncontrados.length > 0 ? (
-                      modelosEncontrados.map((tipo) => (
-                        <label key={tipo} className="flex items-center gap-2 cursor-pointer group/item">
-                          <input type="checkbox" checked={modeloActual === tipo} onChange={() => actualizarFiltro('modelo', tipo)} className="w-3 h-3 bg-transparent border-zinc-700 text-orange-500 rounded-xs" />
-                          <span className={`uppercase font-bold tracking-widest text-[10px] transition-colors ${modeloActual === tipo ? 'text-orange-500' : 'text-zinc-500 group-hover/item:text-zinc-300'}`}>{tipo}S</span>
-                        </label>
-                      ))
+                      modelosEncontrados.map((tipo) => {
+                        const nombreMostrar = tipo.endsWith('S') ? tipo : `${tipo}S`;
+                        return (
+                          <label key={tipo} className="flex items-center gap-2 cursor-pointer group/item">
+                            <input type="checkbox" checked={modeloActual === tipo} onChange={() => actualizarFiltro('modelo', tipo)} className="w-3 h-3 bg-transparent border-zinc-700 text-orange-500 rounded-xs" />
+                            <span className={`uppercase font-bold tracking-widest text-[10px] transition-colors ${modeloActual === tipo ? 'text-orange-500' : 'text-zinc-500 group-hover/item:text-zinc-300'}`}>
+                              {nombreMostrar}
+                            </span>
+                          </label>
+                        )
+                      })
                     ) : (
                       <p className="text-[10px] text-zinc-600 italic">Cargando modelos...</p>
                     )}
@@ -157,13 +201,31 @@ export default function ProductFilters() {
         </div>
       </div>
 
-      {/* COLORES */}
+      {/* COLORES (VISTA MAESTRA REPARADA) */}
       <div>
         <h3 className="text-orange-500 font-display font-black text-xl uppercase tracking-tighter mb-4 border-b border-gray-200 dark:border-zinc-800 pb-2">Colores</h3>
         <div className="flex flex-wrap gap-2 max-h-[300px] overflow-y-auto pr-2 scrollbar-personalizado">
-          {colores.map((color) => (
-            <button key={color.id} title={color.nombre} onClick={() => actualizarFiltro('color', color.nombre)} className={`w-7 h-7 rounded border transition-all shadow-sm flex-shrink-0 ${colorActual === color.nombre ? 'border-white dark:border-zinc-900 ring-2 ring-orange-500 scale-110' : 'border-gray-300 dark:border-zinc-700 hover:border-orange-500 hover:scale-110 bg-zinc-800'}`} style={{ backgroundImage: `url(${color.swatch_url})`, backgroundSize: 'cover', backgroundPosition: 'center' }} />
-          ))}
+          {colores.map((color) => {
+            // 🚀 EVALUAMOS SI ESTE CÍRCULO ES EL QUE ESTÁ SELECCIONADO COMPARANDO SU ID ÚNICO
+            const estaSeleccionado = colorActualId === color.id;
+            
+            // Creamos un Tooltip dinámico e inteligente (Ej: "WATERMELON RED (STICK)")
+            const tituloTooltip = color.modeloAsociado ? `${color.nombre} (${color.modeloAsociado})` : color.nombre;
+
+            return (
+              <button 
+                key={color.id} 
+                title={tituloTooltip} 
+                onClick={() => actualizarFiltro('color', color.nombre, color.id)} 
+                className={`w-7 h-7 rounded border transition-all shadow-sm flex-shrink-0 ${
+                  estaSeleccionado 
+                    ? 'border-white dark:border-zinc-900 ring-2 ring-orange-500 scale-110' 
+                    : 'border-gray-300 dark:border-zinc-700 hover:border-orange-500 hover:scale-110'
+                }`} 
+                style={{ backgroundImage: `url(${color.swatch_url})`, backgroundSize: 'cover', backgroundPosition: 'center' }} 
+              />
+            );
+          })}
         </div>
       </div>
     </div>
@@ -171,7 +233,6 @@ export default function ProductFilters() {
 
   return (
     <>
-      {/* 🚀 BOTÓN MÓVIL (Se oculta en PC) */}
       <div className="lg:hidden w-full mb-4">
         <button 
           onClick={() => setIsMobileOpen(true)}
@@ -182,7 +243,6 @@ export default function ProductFilters() {
         </button>
       </div>
 
-      {/* 🚀 CAJÓN MÓVIL (Off-canvas) */}
       <div className={`fixed inset-0 z-[150] flex transition-opacity duration-300 lg:hidden ${isMobileOpen ? "opacity-100 visible" : "opacity-0 invisible"}`}>
         <div className="absolute inset-0 bg-black/60 backdrop-blur-sm" onClick={() => setIsMobileOpen(false)} />
         <div className={`relative w-4/5 max-w-sm h-full bg-white dark:bg-[#0a0a0a] shadow-2xl overflow-y-auto transform transition-transform duration-300 ease-in-out ${isMobileOpen ? "translate-x-0" : "-translate-x-full"}`}>
@@ -198,7 +258,6 @@ export default function ProductFilters() {
         </div>
       </div>
 
-      {/* 🚀 BARRA LATERAL DESKTOP */}
       <aside className="hidden lg:block w-64 xl:w-72 flex-shrink-0 sticky top-28 h-fit max-h-[calc(100vh-8rem)] overflow-y-auto pr-4 scrollbar-personalizado">
         {FilterContent}
       </aside>

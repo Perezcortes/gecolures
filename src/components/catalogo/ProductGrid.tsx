@@ -10,6 +10,7 @@ type ProductGridProps = {
   categoria?: string;
   talla?: string;
   color?: string;
+  color_id?: string; // 🚀 NUEVO: Agregamos el ID del color
   modelo?: string;
   sort?: string; 
   view?: string; 
@@ -20,6 +21,7 @@ export default async function ProductGrid({
   categoria = "", 
   talla = "", 
   color = "",
+  color_id = "", // 🚀 Recibimos el ID
   modelo = "",
   sort = "newest",
   view = "grid"
@@ -51,10 +53,18 @@ export default async function ProductGrid({
 
   if (categoria) query = query.eq('categorias.nombre', categoria);
   if (talla) query = query.eq('producto_variantes.especificaciones.valor', talla);
-  if (color) query = query.eq('producto_variantes.colores.nombre', color);
+  
+  // 🚀 LA MAGIA DEL FILTRO: Usamos el ID de la textura en lugar del nombre
+  if (color_id) {
+    query = query.eq('producto_variantes.colores.id', color_id);
+  } else if (color) {
+    // Respaldo (Fallback) por si entran con una URL vieja sin ID
+    query = query.ilike('producto_variantes.colores.nombre', `${color}%`);
+  }
+
   if (terminoLimpio) query = query.ilike('nombre', `%${terminoLimpio}%`); 
 
-  // 🚀 LÓGICA DE ORDENAMIENTO (SORTING)
+  // LÓGICA DE ORDENAMIENTO (SORTING)
   switch(sort) {
     case "price_asc": query = query.order('precio_base', { ascending: true }); break;
     case "price_desc": query = query.order('precio_base', { ascending: false }); break;
@@ -82,9 +92,13 @@ export default async function ProductGrid({
 
     const coloresArray = Array.from(coloresUnicos.values());
     const colorObj = coloresArray.length > 0 ? (coloresArray[0] as any) : null;
-    const colorMuestra = colorObj ? colorObj.nombre : "";
+    
+    // Limpiamos el nombre para la calculadora (Le quitamos los paréntesis)
+    const colorMuestraBruto = colorObj ? colorObj.nombre : "";
+    const colorMuestraLimpio = colorMuestraBruto.split(' (')[0].trim();
+    
     const clasificacionMuestra = colorObj && colorObj.clasificacion ? colorObj.clasificacion : "Sólido";
-    const calculo = calcularPrecioYPiezas(prod.nombre, tallaMuestra, colorMuestra, clasificacionMuestra);
+    const calculo = calcularPrecioYPiezas(prod.nombre, tallaMuestra, colorMuestraLimpio, clasificacionMuestra);
 
     return {
       id: prod.id, slug: prod.slug, name: prod.nombre, price: calculo.precioFormateado, 
@@ -98,6 +112,7 @@ export default async function ProductGrid({
     if (categoria) params.set('categoria', categoria);
     if (talla) params.set('talla', talla);
     if (color) params.set('color', color);
+    if (color_id) params.set('color_id', color_id); // 🚀 Lo mantenemos en la paginación
     if (modelo) params.set('modelo', modelo);
     return params;
   };
@@ -172,7 +187,7 @@ export default async function ProductGrid({
         </div>
       )}
 
-      {/* 🚀 RENDERIZADO CONDICIONAL: GRID vs LIST */}
+      {/* RENDERIZADO CONDICIONAL: GRID vs LIST */}
       <div className={isList ? "flex flex-col gap-4" : "grid grid-cols-2 md:grid-cols-3 xl:grid-cols-4 gap-3 md:gap-6 lg:gap-8"}>
         {productosFormateados.map((product) => (
           <Link 
@@ -223,7 +238,7 @@ export default async function ProductGrid({
                 </p>
                 <div className="flex -space-x-1.5">
                   {product.colores.slice(0, 3).map((color: any, idx: number) => (
-                    <div key={color.id} title={color.nombre} className="w-4 h-4 md:w-5 md:h-5 rounded-full border border-zinc-50 dark:border-[#121212]" style={{ backgroundImage: `url(${color.swatch_url})`, backgroundSize: 'cover', zIndex: 3 - idx }} />
+                    <div key={color.id} title={color.nombre.split(' (')[0]} className="w-4 h-4 md:w-5 md:h-5 rounded-full border border-zinc-50 dark:border-[#121212]" style={{ backgroundImage: `url(${color.swatch_url})`, backgroundSize: 'cover', zIndex: 3 - idx }} />
                   ))}
                 </div>
               </div>

@@ -11,7 +11,16 @@ export function calcularPrecioYPiezas(modelo: string, talla: string, colorNombre
   // 1. ¿Es Laminado? (Leemos la nueva bandera de la BD, o buscamos 'LAM' como respaldo de seguridad)
   const esLaminado = clasificacionColor.toUpperCase() === 'LAMINADO' || colorNombre.toUpperCase().includes('LAM');
 
-  // 2. MATRIZ DE PRECIOS SOLO PARA STICKS
+  // 🚀 2. REGLA INQUEBRANTABLE PARA WACKY WORM
+  if (nombreModelo.includes('WACKY WORM') || nombreModelo.includes('WACKY')) {
+    return { 
+      precioFormateado: `$110 MXN`, 
+      piezas: 10, 
+      textoPaquete: `PAQUETE CON 10 PZAS` 
+    };
+  }
+
+  // 3. MATRIZ DE PRECIOS SOLO PARA STICKS
   if (nombreModelo.includes('STICK')) {
     
     // Todos los sticks arrancan en 115 por defecto según la nueva regla

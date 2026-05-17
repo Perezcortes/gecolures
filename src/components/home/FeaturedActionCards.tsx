@@ -34,8 +34,9 @@ const ACTION_CARDS = [
     title: "PARA DÍAS DIFÍCILES",
     productName: "WACKY WORM",
     price: "Próximamente",
-    productThumb: "https://res.cloudinary.com/dkem2i0fv/image/upload/v1776836058/wacky_rd6dar.png", 
-    isAvailable: false,
+    productThumb: "https://res.cloudinary.com/dkem2i0fv/image/upload/v1779057986/gecolures/ropa-gear/ycgxjs0s3834a0rpunue.png", 
+    isAvailable: true,
+    href: "catalogo?page=1&categoria=Señuelos&modelo=WACKY+WORM"
   },
   {
     id: 4,
