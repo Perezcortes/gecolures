@@ -1,8 +1,9 @@
 "use client";
 
 import Link from "next/link";
-import { usePathname } from "next/navigation";
+import { usePathname, useRouter } from "next/navigation";
 import { FiHome, FiBox, FiShoppingBag, FiUsers, FiSettings, FiLogOut } from "react-icons/fi";
+import { createClient } from "@/utils/supabase/client"; 
 
 export default function AdminLayoutClient({ 
   children, 
@@ -12,6 +13,8 @@ export default function AdminLayoutClient({
   userName: string;
 }) {
   const pathname = usePathname();
+  const router = useRouter();
+  const supabase = createClient();
 
   const menuItems = [
     { name: "Resumen", href: "/dashboard", icon: FiHome },
@@ -20,6 +23,13 @@ export default function AdminLayoutClient({
     { name: "Clientes", href: "/dashboard/clientes", icon: FiUsers },
     { name: "Configuración", href: "/dashboard/configuracion", icon: FiSettings },
   ];
+
+  // LÓGICA DE LOGOUT
+  const handleLogout = async () => {
+    await supabase.auth.signOut();
+    router.push("/login"); // Cambia "/login" por tu ruta de inicio de sesión real si es diferente
+    router.refresh();
+  };
 
   return (
     <div className="min-h-screen bg-zinc-50 dark:bg-[#0a0a0a] flex">
@@ -34,7 +44,10 @@ export default function AdminLayoutClient({
 
         <nav className="flex-1 p-4 flex flex-col gap-2">
           {menuItems.map((item) => {
-            const isActive = pathname === item.href || pathname.startsWith(`${item.href}/`);
+            const isActive = item.href === '/dashboard' 
+              ? pathname === '/dashboard' 
+              : pathname.startsWith(item.href);
+
             return (
               <Link 
                 key={item.name} 
@@ -62,7 +75,10 @@ export default function AdminLayoutClient({
               <span className="text-[10px] uppercase tracking-widest text-orange-500">Admin</span>
             </div>
           </div>
-          <button className="w-full mt-2 flex items-center gap-3 px-4 py-2 text-xs font-bold uppercase tracking-widest text-red-500 hover:bg-red-50 dark:hover:bg-red-950/30 rounded-md transition-colors">
+          <button 
+            onClick={handleLogout} 
+            className="w-full mt-2 flex items-center gap-3 px-4 py-2 text-xs font-bold uppercase tracking-widest text-red-500 hover:bg-red-50 dark:hover:bg-red-950/30 rounded-md transition-colors"
+          >
             <FiLogOut className="w-4 h-4" />
             Cerrar Sesión
           </button>

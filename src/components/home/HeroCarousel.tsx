@@ -2,13 +2,13 @@
 
 import { Swiper, SwiperSlide } from "swiper/react";
 import { Autoplay, Pagination, Navigation } from "swiper/modules";
+import Link from "next/link"; 
 
 // Importar los estilos de Swiper
 import "swiper/css";
 import "swiper/css/pagination";
 import "swiper/css/navigation";
 
-// 🚀 AJUSTE TÁCTICO DE DATOS: Ahora aceptamos mobileBg y desktopBg
 const slides = [
   {
     id: 1,
@@ -17,8 +17,9 @@ const slides = [
     titleLine2: "ESTÁ AQUÍ",
     description: "Ingeniería para el ataque. Nacidos en lo salvaje. Únete a las filas de la pesca táctica con GECO.",
     btnPrimary: "ARMAMENTO",
+    linkPrimary: "/catalogo", 
     btnSecondary: "CONOCE A LOS PROS",
-    // Imagen específica solicitada para móvil y desktop
+    linkSecondary: "/team",   
     mobileBg: "/slide11.png", 
     desktopBg: "/slide1.png", 
   },
@@ -29,8 +30,9 @@ const slides = [
     titleLine2: "EL AGUA",
     description: "Conoce el nuevo GECO Craw 4\". Diseñado específicamente para penetrar la cobertura más densa.",
     btnPrimary: "COMPRAR CRAW",
-    btnSecondary: "VER VIDEO",
-    // Si los otros slides usan la misma imagen, repetimos el path
+    linkPrimary: "/catalogo", 
+    btnSecondary: "VER CATÁLOGO",
+    linkSecondary: "/catalogo", 
     mobileBg: "/slide3.png", 
     desktopBg: "/slide3.png", 
   },
@@ -41,7 +43,9 @@ const slides = [
     titleLine2: "COMO PRO",
     description: "Equípate con el terminal tackle que usan los campeones de torneos nacionales.",
     btnPrimary: "VER TACKLE",
+    linkPrimary: "/catalogo",
     btnSecondary: "UNIRSE AL EQUIPO",
+    linkSecondary: "/team",
     mobileBg: "/slide2.png",
     desktopBg: "/slide2.png",
   }
@@ -49,7 +53,6 @@ const slides = [
 
 export default function HeroCarousel() {
   return (
-    // Mantenemos h-[92vh] como base táctica
     <section className="relative h-[92vh] min-h-[600px] w-full bg-zinc-900 group">
       
       <style>{`
@@ -92,7 +95,7 @@ export default function HeroCarousel() {
       <Swiper
         modules={[Autoplay, Pagination, Navigation]}
         loop={true}
-        speed={800} // Transición suave de 0.8 segundos
+        speed={800} 
         autoplay={{
           delay: 5000,
           disableOnInteraction: false,
@@ -108,24 +111,19 @@ export default function HeroCarousel() {
             <div className="relative w-full h-full flex items-center justify-center md:justify-start px-6 md:px-16 lg:px-24">
               
               <div className="absolute inset-0 z-0 overflow-hidden">
-                {/* 🚀 LA MAGIA RESPONSIVA ESTÁ AQUÍ */}
                 <div 
                   className="w-full h-full absolute inset-0 bg-cover bg-center bg-no-repeat transition-all duration-300 ease-in-out"
                   style={{
-                    // Usamos variables CSS para inyectar los paths dinámicamente
                     '--image-mobile': `url('${slide.mobileBg}')`,
                     '--image-desktop': `url('${slide.desktopBg}')`,
                   } as React.CSSProperties}
                 >
-                  {/* Aplicamos la lógica de Tailwind: móvil por defecto, desktop con md: */}
                   <div className="w-full h-full bg-[image:var(--image-mobile)] md:bg-[image:var(--image-desktop)] bg-cover bg-center bg-no-repeat" />
                 </div>
 
-                {/* Overlay oscuro uniforme */}
                 <div className="absolute inset-0 bg-black/50 z-10"></div>
               </div>
 
-              {/* Contenido alineado */}
               <div className="relative z-20 max-w-3xl text-center md:text-left mt-12 md:mt-0 pt-16 pb-8">
                 
                 <div className="inline-block bg-orange-500 text-white px-3 py-1 font-display font-bold uppercase tracking-widest text-xs md:text-sm mb-4 md:mb-6 rounded-sm">
@@ -141,14 +139,19 @@ export default function HeroCarousel() {
                   {slide.description}
                 </p>
                 
-                {/* Botones */}
                 <div className="flex flex-col sm:flex-row items-center justify-center md:justify-start gap-4 w-full sm:w-auto px-4 sm:px-0">
-                  <button className="w-full sm:w-auto bg-orange-500 text-white px-8 py-3.5 md:py-4 font-display font-black uppercase text-sm md:text-base tracking-widest hover:bg-orange-600 transition-all rounded-sm shadow-[4px_4px_0_0_rgba(0,0,0,0.2)] hover:shadow-none hover:translate-x-[1px] hover:translate-y-[1px]">
+                  <Link 
+                    href={slide.linkPrimary} 
+                    className="w-full sm:w-auto flex items-center justify-center bg-orange-500 text-white px-8 py-3.5 md:py-4 font-display font-black uppercase text-sm md:text-base tracking-widest hover:bg-orange-600 transition-all rounded-sm shadow-[4px_4px_0_0_rgba(0,0,0,0.2)] hover:shadow-none hover:translate-x-[1px] hover:translate-y-[1px]"
+                  >
                     {slide.btnPrimary}
-                  </button>
-                  <button className="w-full sm:w-auto border-2 border-white text-white px-8 py-3.5 md:py-4 font-display font-black uppercase text-sm md:text-base tracking-widest hover:bg-white hover:text-black transition-all rounded-sm backdrop-blur-sm">
+                  </Link>
+                  <Link 
+                    href={slide.linkSecondary} 
+                    className="w-full sm:w-auto flex items-center justify-center border-2 border-white text-white px-8 py-3.5 md:py-4 font-display font-black uppercase text-sm md:text-base tracking-widest hover:bg-white hover:text-black transition-all rounded-sm backdrop-blur-sm"
+                  >
                     {slide.btnSecondary}
-                  </button>
+                  </Link>
                 </div>
 
               </div>
