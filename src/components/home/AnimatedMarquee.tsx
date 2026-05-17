@@ -2,10 +2,10 @@ import { FiTarget } from "react-icons/fi";
 
 const PALABRAS_CLAVE = [
   "GECO LURES",
-  "28 AÑOS DE EXPERIENCIA",
+  "+28 AÑOS DE EXPERIENCIA",
   "ESPECIALISTAS EN LOBINA",
   "MÁS DE 300 COLORES",
-  "14 AÑOS DE LA MARCA",
+  "+14 AÑOS DE LA MARCA",
   "PLÁSTICOS SUAVES PREMIUM",
   "ENVÍOS A TODO MÉXICO",
   "DISEÑO TÁCTICO",
