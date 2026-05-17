@@ -11,7 +11,8 @@ const bgImages = [
     "https://res.cloudinary.com/dkem2i0fv/image/upload/v1776236843/548227689_764398456566162_4922236690723613070_n_mrwxpf.jpg",
     "https://res.cloudinary.com/dkem2i0fv/image/upload/v1777832464/geco_letras_heubcu.png",
     "https://res.cloudinary.com/dkem2i0fv/image/upload/v1776023650/475122128_616861480711601_4563349591646411418_n_zlldwe.jpg",
-    "https://res.cloudinary.com/dkem2i0fv/image/upload/v1776834355/channels4_profile_isr7hp.jpg"
+    "https://res.cloudinary.com/dkem2i0fv/image/upload/v1776834355/channels4_profile_isr7hp.jpg",
+    "https://res.cloudinary.com/dkem2i0fv/image/upload/v1779039586/674935822_4251672714978146_9084518993864894121_n_y8ieid.jpg"
 ];
 
 export default function TeamHeroCarousel() {
