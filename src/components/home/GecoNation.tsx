@@ -96,6 +96,14 @@ const COMMUNITY_POSTS = [
     postImage: "https://img.youtube.com/vi/dZ2iWb1QU5o/maxresdefault.jpg",
     link: "https://youtu.be/dZ2iWb1QU5o",
     videoId: "dZ2iWb1QU5o" // 🚀 Añadido videoId
+  },
+  {
+    id: 11,
+    plataforma: "facebook",
+    username: "Narcizo Perez",
+    userImage: "https://res.cloudinary.com/dkem2i0fv/image/upload/v1779039586/674935822_4251672714978146_9084518993864894121_n_y8ieid.jpg",
+    postImage: "https://res.cloudinary.com/dkem2i0fv/image/upload/v1779039569/513500806_3889428564535898_3051877589954399293_n_jdrsom.jpg",
+    link: "https://www.facebook.com/narcizo.perez.71?locale=es_LA"
   }
 ];
 

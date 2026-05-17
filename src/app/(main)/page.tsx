@@ -14,9 +14,9 @@ export default function Home() {
 
       <NuevosLanzamientos />
 
-      <HistorySection />
-
       <FeaturedActionCards />
+
+      <HistorySection />
 
       <GecoNation />
 
