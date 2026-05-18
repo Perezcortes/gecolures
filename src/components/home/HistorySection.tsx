@@ -30,13 +30,13 @@ export default function HistorySection() {
           <div className="w-full lg:w-1/2 order-2 lg:order-1 space-y-8">
             <div>
               <span className="inline-block px-3 py-1 bg-orange-500/10 text-orange-500 text-[10px] md:text-xs font-black uppercase tracking-widest mb-4 rounded-sm border border-orange-500/20">
-                28 Años de Maestría • 14 Años Geco Lures
+                +28 Años de Maestría • +14 Años Geco Lures
               </span>
               <h2 className="text-4xl md:text-5xl font-display font-black uppercase tracking-tighter text-gray-900 dark:text-white mb-4 leading-tight">
                 Ingeniería mexicana <span className="text-orange-500">para la pesca de élite.</span>
               </h2>
               <p className="text-gray-600 dark:text-zinc-400 text-sm md:text-base font-medium leading-relaxed mb-6">
-                Con 28 años de experiencia en el rubro, Geco Lures ha evolucionado desde sus orígenes en el agua salada hasta convertirse en el referente de <strong>señuelos blandos para Lobina</strong>. Nuestra historia es de adaptación y precisión técnica para pescadores de todo el país.
+                Con +28 años de experiencia en el rubro, Geco Lures ha evolucionado desde sus orígenes en el agua salada hasta convertirse en el referente de <strong>señuelos blandos para Lobina</strong>. Nuestra historia es de adaptación y precisión técnica para pescadores de todo el país.
               </p>
             </div>
 

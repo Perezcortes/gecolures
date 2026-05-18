@@ -10,7 +10,7 @@ export const metadata = {
   metadataBase: new URL(process.env.NEXT_PUBLIC_BASE_URL || 'https://gecolures.com'),
   
   title: "GECO LURES | Arsenal de Élite para la Pesca",
-  description: "Con 28 años de experiencia, Geco Lures diseña y fabrica plásticos suaves de grado táctico desde Ciudad Victoria, Tamaulipas. Especialistas en Lobina.",
+  description: "Con +28 años de experiencia, Geco Lures diseña y fabrica plásticos suaves de grado táctico desde Ciudad Victoria, Tamaulipas. Especialistas en Lobina.",
   
   keywords: [
     "señuelos de pesca", "geco lures", "pesca de lobina", "plásticos suaves", 

@@ -13,8 +13,8 @@ export default function ProductAccordion({ descripcion, piezas }: AccordionProps
 
   // Lógica automática para el texto del paquete
   const textoPaquete = piezas
-    ? `Este empaque contiene ${piezas} piezas.\n\nDesde Ciudad Victoria con 28 años de experiencia. Plásticos de grado profesional con densidad controlada para un movimiento irresistible bajo el agua.`
-    : "Desde Ciudad Victoria con 28 años de experiencia. Plásticos de grado profesional con densidad controlada para un movimiento irresistible bajo el agua.";
+    ? `Este empaque contiene ${piezas} piezas.\n\nDesde Ciudad Victoria con +28 años de experiencia. Plásticos de grado profesional con densidad controlada para un movimiento irresistible bajo el agua.`
+    : "Desde Ciudad Victoria con +28 años de experiencia. Plásticos de grado profesional con densidad controlada para un movimiento irresistible bajo el agua.";
 
   const specs = [
     {
